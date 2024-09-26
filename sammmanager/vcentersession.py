@@ -12,8 +12,8 @@ class VCenterSession:
 		with open(config_file, "r") as f:
 			self.config = json.load(f)
 		timeout = Timeout(
-			connect=config.get("connection_timeout_seconds", 2.0), 
-			read=config.get("read_timeout_seconds", 30.0))
+			connect=self.config.get("connection_timeout_seconds", 2.0), 
+			read=self.config.get("read_timeout_seconds", 30.0))
 		self.http = PoolManager(cert_reqs='CERT_NONE', timeout=timeout)
 		self.session_id = ""
 	def login(self):

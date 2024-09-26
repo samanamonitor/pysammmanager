@@ -3,12 +3,10 @@ __version__ = "0.0.1"
 try:
 	from .vcentersession import VCenterSession
 	from .rdp import rdp_file
-	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 except:
 	pass
 
 import os
-
 
 def test():
 	return ('200 OK',
@@ -51,6 +49,7 @@ def rdp(ip_address=None):
 			rdp_data.encode('ascii'))
 
 def vmdetail(hostedmachinename=None):
+	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 	if hostedmachinename is None:
 		raise KeyError("Virtual Machine not found")
 	data = vc.search_vm(hostedmachinename)
@@ -67,6 +66,7 @@ def vmdetail(hostedmachinename=None):
 		)
 
 def hostdetail(hostingservername=None):
+	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 	if hostingservername is None:
 		raise KeyError("Host not found")
 	data = vc.search_host(hostingservername)
