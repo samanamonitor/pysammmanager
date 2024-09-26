@@ -1,0 +1,2 @@
+uwsgi
+urllib3
