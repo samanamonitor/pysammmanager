@@ -1,0 +1,10 @@
+.DS_Store
+build
+
+private
+
+*.egg-info
+
+__pycache__
+
+*.patch
