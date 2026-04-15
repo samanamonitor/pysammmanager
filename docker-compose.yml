@@ -1,0 +1,10 @@
+services:
+  dev:
+    build: .
+    volumes:
+      - .:/usr/src
+      - ./private:/private
+    ports:
+      - "9091:9090"
+    environment:
+      - LOGLEVEL=DEBUG

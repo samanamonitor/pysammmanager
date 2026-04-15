@@ -11,5 +11,5 @@ if __name__ == "__main__":
             'scripts/manager.py'
             ],
         data_files=[],
-        install_requires=[ "uwsgi", "urllib3" ]
+        install_requires=[ "uwsgi", "urllib3", "multipart", "python-multipart" ]
     )

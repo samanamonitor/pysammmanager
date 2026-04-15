@@ -1,2 +1,4 @@
 uwsgi
 urllib3
+multipart
+python-multipart

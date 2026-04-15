@@ -6,7 +6,15 @@ try:
 except:
 	pass
 
+import sys
 import os
+import logging
+from . import tokens
+import json
+
+log = logging.getLogger(__name__)
+logging.basicConfig(stream=sys.stderr)
+log.setLevel(os.environ.get("LOGLEVEL", "WARN"))
 
 def test():
 	return ('200 OK',
@@ -23,8 +31,17 @@ def notfound(message='Unknown'):
 			[responsehtml.encode('ascii')])
 
 def server_error(error="Unknown Error"):
-	responsehtml = "<html><head><title>Internal Server Error</title></head><body><h1>Internal Server Error</h1>%s</body></html>" % str(error)
-	return ('500 Internal Server Error', 
+	responsehtml = "<html><head><title>Bad Request</title></head><body><h1>Bad Request</h1>%s</body></html>" % str(error)
+	return ('400 Bad Request', 
+			[
+				('Content-Type','text/html'),
+				('Content-Length', str(len(responsehtml)))
+			],
+			[responsehtml.encode('ascii')])
+
+def not_authorized(error="Not Authorized"):
+	responsehtml = "<html><head><title>Not Authorized</title></head><body><h1>Not Authorized</h1></body></html>"
+	return ('401 Not Authorized', 
 			[
 				('Content-Type','text/html'),
 				('Content-Length', str(len(responsehtml)))
@@ -82,3 +99,65 @@ def hostdetail(hostingservername=None):
 		]
 		)
 
+def updatecreds(**kwargs):
+	log.info("Received body data=%s", kwargs)
+	token = kwargs.get("token")
+	if token is None:
+		log.error("No token found in request")
+		return not_authorized()
+
+	if isinstance(token, list) and len(token) > 0:
+		token = token[0]
+
+	auth = tokens.verify_token(token)
+	if not isinstance(auth, dict):
+		log.error("Invalid token. token=%s" % token)
+		return not_authorized()
+
+	if auth.get("dashboard", "") != "SAMM Windows Credentials Update":
+		log.error("Invalid dashboard. auth=%s" % auth)
+		return not_authorized()
+
+
+	auth_method = kwargs.get("auth_method")
+	if auth_method == "userpass":
+		username = kwargs.get("username")
+		password = kwargs.get("password")
+		with open("/private/samm.env", "w", encoding="utf-8") as file:
+			file.write(f"CIM_USERNAME={username}\n")
+			file.write(f"CIM_PASSWORD={password}\n")
+			file.write("CIM_METHOD=kerberos\n")
+		log.info("creating userpass")
+	elif auth_method == "keytab":
+		principal = kwargs.get("principal")
+		ktf = kwargs.get("files", {}).get("keytab_file")
+		ktf.save_as('/private/samm.keytab')
+		with open("/private/samm.env", "w", encoding="utf-8") as file:
+			file.write(f"CIM_USERNAME={principal}\n")
+			file.write("KRB5_CLIENT_KTNAME=/etc/krb5.keytab\n")
+			file.write("CIM_METHOD=kerberos\n")
+		log.info("creating keytab")
+
+	with open("/app/samm-update-credentials.html", "rb") as f:
+		body = f.read()
+
+	return ("200 OK",
+		[
+			("Content-Type", "text/html; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)
+
+def gettoken(**kwargs):
+	user = kwargs.get("user", "")
+	if isinstance(user, list):
+		user = "".join(user)
+	dashboard = kwargs.get("dashboard", "")
+	if isinstance(dashboard, list):
+		dashboard = "".join(dashboard)
+	t = tokens.generate_token(user, dashboard)
+	body = json.dumps({"token": t})
+	return ("200 OK",
+		[
+			("Content-Type", "application/json; charset=utf-8"),
+			("Content-Length", str(len(body)))
+		], [body.encode('utf-8')])
