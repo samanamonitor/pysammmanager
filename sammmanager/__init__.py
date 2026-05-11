@@ -171,8 +171,10 @@ def private(**kwargs):
 		temp = Template(f.read())
 
 	items=[]
-	name='file1.txt'
-	items.append(f"{{ name: '{name}', type: 'file', size: 1, modified: '2026-04-10 09:12'}},")
+	privatepath=Path("/private")
+	for f in privatepath.iterdir():
+		if f.is_file():
+			items.append(f"{{ name: '{f.name}', type: 'file', size: {f.stat().st_size}, modified: '{f.stat().st_mtime}'}},")
 
 	body = temp.render(name="Hello", items=items).encode("utf8")
 	return ("200 OK",
