@@ -161,3 +161,13 @@ def gettoken(**kwargs):
 			("Content-Type", "application/json; charset=utf-8"),
 			("Content-Length", str(len(body)))
 		], [body.encode('utf-8')])
+
+def private(**kwargs):
+		with open("/app/samm-file-manager.html", "rb") as f:
+		body = f.read()
+
+	return ("200 OK",
+		[
+			("Content-Type", "text/html; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)

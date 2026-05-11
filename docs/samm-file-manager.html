@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SAMM Private Files Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg-canvas:       #0b0c0e;
+      --bg-primary:      #111217;
+      --bg-secondary:    #181b1f;
+      --bg-elevated:     #1f2228;
+      --bg-hover:        #252931;
+      --bg-selected:     #1a2a3f;
+      --border:          #2c3038;
+      --border-focus:    #3d8ef8;
+      --text-primary:    #d8dce4;
+      --text-secondary:  #9fa8b5;
+      --text-muted:      #5c6370;
+      --accent-blue:     #3d8ef8;
+      --accent-blue-dim: #1f4a8a;
+      --accent-green:    #73bf69;
+      --accent-red:      #f2495c;
+      --accent-orange:   #f18b34;
+      --accent-yellow:   #fade2a;
+      --input-bg:        #0d0f13;
+      --shadow:          0 4px 24px rgba(0,0,0,.55);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 100%;
+      max-width: 720px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── Panel Header ── */
+    .panel-header {
+      padding: 16px 20px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .panel-icon {
+      width: 34px; height: 34px;
+      border-radius: 5px;
+      background: rgba(241,139,52,.15);
+      border: 1px solid rgba(241,139,52,.25);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .panel-title { font-size: 15px; font-weight: 500; color: var(--text-primary); letter-spacing: -.01em; }
+    .panel-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+    .panel-header-actions { margin-left: auto; display: flex; gap: 6px; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      padding: 10px 16px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Breadcrumb path */
+    .path-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0 10px;
+      height: 30px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      overflow: hidden;
+    }
+    .path-seg {
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color .15s;
+    }
+    .path-seg:hover { color: var(--accent-blue); }
+    .path-seg.current { color: var(--text-primary); cursor: default; }
+    .path-sep { color: var(--text-muted); }
+
+    /* Search */
+    .search-wrap {
+      position: relative;
+    }
+    .search-wrap input {
+      width: 180px;
+      height: 30px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      padding: 0 10px 0 28px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .search-wrap input::placeholder { color: var(--text-muted); }
+    .search-wrap input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 2px rgba(61,142,248,.15); }
+    .search-icon {
+      position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none;
+    }
+
+    /* Toolbar buttons */
+    .tbtn {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      display: flex; align-items: center; gap: 5px;
+      transition: background .15s, color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .tbtn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: #3d4550; }
+    .tbtn.primary {
+      background: var(--accent-blue); color: #fff;
+      border-color: var(--accent-blue);
+    }
+    .tbtn.primary:hover { background: #5aa0fb; }
+    .tbtn.danger { color: var(--accent-red); border-color: rgba(242,73,92,.3); }
+    .tbtn.danger:hover { background: rgba(242,73,92,.1); border-color: var(--accent-red); }
+    .tbtn:disabled { opacity: .4; cursor: default; pointer-events: none; }
+    .tbtn-icon {
+      width: 30px; padding: 0;
+      justify-content: center;
+    }
+
+    .toolbar-sep {
+      width: 1px; height: 20px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── File list ── */
+    .file-list {
+      min-height: 320px;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    /* Column header */
+    .col-header {
+      display: grid;
+      grid-template-columns: 24px 1fr 90px 90px 110px 80px;
+      align-items: center;
+      padding: 0 16px;
+      height: 30px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-primary);
+      position: sticky; top: 0; z-index: 1;
+    }
+    .col-th {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      user-select: none;
+      transition: color .15s;
+    }
+    .col-th:hover { color: var(--text-secondary); }
+    .col-th.sorted { color: var(--accent-blue); }
+    .col-th:first-child { cursor: default; }
+
+    /* File row */
+    .file-row {
+      display: grid;
+      grid-template-columns: 24px 1fr 90px 90px 110px 80px;
+      align-items: center;
+      padding: 0 16px;
+      height: 38px;
+      border-bottom: 1px solid rgba(44,48,56,.5);
+      cursor: pointer;
+      transition: background .1s;
+      position: relative;
+    }
+    .file-row:hover { background: var(--bg-hover); }
+    .file-row.selected { background: var(--bg-selected); }
+    .file-row.selected:hover { background: #1e3350; }
+    .file-row:last-child { border-bottom: none; }
+
+    /* Checkbox */
+    .file-check {
+      width: 14px; height: 14px;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    /* File name cell */
+    .file-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .file-icon { flex-shrink: 0; }
+    .file-label {
+      font-size: 13px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-label.folder { color: var(--accent-blue); font-weight: 500; }
+    .file-ext-badge {
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 1px 5px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      font-weight: 600;
+      letter-spacing: .05em;
+    }
+
+    .col-size, .col-modified, .col-perms {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .col-perms { color: var(--text-secondary); }
+
+    /* Row actions (appear on hover) */
+    .row-actions {
+      display: flex;
+      gap: 3px;
+      justify-content: flex-end;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .file-row:hover .row-actions { opacity: 1; }
+    .file-row.selected .row-actions { opacity: 1; }
+    .row-btn {
+      width: 22px; height: 22px;
+      border-radius: 3px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .12s, color .12s;
+    }
+    .row-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .row-btn.del:hover { background: rgba(242,73,92,.15); color: var(--accent-red); }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 220px;
+      gap: 10px;
+      color: var(--text-muted);
+    }
+    .empty-state svg { opacity: .35; }
+    .empty-state p { font-size: 13px; }
+
+    /* ── Drop overlay ── */
+    .drop-overlay {
+      display: none;
+      position: absolute; inset: 0;
+      background: rgba(61,142,248,.06);
+      border: 2px dashed var(--accent-blue);
+      border-radius: 6px;
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      color: var(--accent-blue);
+      font-size: 14px;
+      font-weight: 500;
+      pointer-events: none;
+    }
+    .panel.drag-over .drop-overlay { display: flex; }
+    .panel { position: relative; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      padding: 8px 16px;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .status-item {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+    .status-item span { color: var(--text-secondary); }
+    .status-sel { margin-left: auto; }
+
+    /* ── Upload input ── */
+    #upload-input { display: none; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 360px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 14px 18px;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .modal-body { padding: 18px; }
+    .modal-body label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .modal-body input[type="text"] {
+      width: 100%;
+      height: 34px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 0 10px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .modal-body input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 2px rgba(61,142,248,.15); }
+    .modal-footer {
+      padding: 12px 18px;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2c3038; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3d4550; }
+  </style>
+</head>
+<body>
+
+<div class="panel" id="panel">
+
+  <!-- Drop overlay -->
+  <div class="drop-overlay">
+    <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Drop files to upload
+  </div>
+
+  <!-- Header -->
+  <div class="panel-header">
+    <div class="panel-icon">
+      <svg width="18" height="18" fill="none" stroke="#f18b34" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div>
+      <div class="panel-title">SAMM File Manager</div>
+      <div class="panel-sub" id="current-path-display">samm.datasource / filesystem</div>
+    </div>
+    <div class="panel-header-actions">
+      <button class="tbtn tbtn-icon" title="Refresh" onclick="renderFiles()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <!-- Breadcrumb -->
+    <div class="path-bar" id="path-bar"></div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-icon">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </span>
+      <input type="text" id="search-input" placeholder="Filter files…" oninput="renderFiles()"/>
+    </div>
+
+    <div class="toolbar-sep"></div>
+
+    <!-- Actions -->
+    <button class="tbtn primary" onclick="document.getElementById('upload-input').click()">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload
+    </button>
+    <button class="tbtn" onclick="openNewFolderModal()">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+      New folder
+    </button>
+
+    <div class="toolbar-sep"></div>
+
+    <button class="tbtn danger" id="btn-delete-sel" disabled onclick="deleteSelected()">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      Delete
+    </button>
+    <button class="tbtn" id="btn-download-sel" disabled onclick="downloadSelected()">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download
+    </button>
+  </div>
+
+  <input type="file" id="upload-input" multiple onchange="handleUpload(this)"/>
+
+  <!-- Column headers -->
+  <div class="col-header">
+    <div><input type="checkbox" class="file-check" id="check-all" onchange="toggleAll(this)"/></div>
+    <div class="col-th sorted" data-col="name" onclick="sortBy('name')">
+      Name
+      <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" id="sort-icon-name"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="col-th" data-col="size" onclick="sortBy('size')" style="justify-content:flex-end">Size</div>
+    <div class="col-th" data-col="type" onclick="sortBy('type')">Type</div>
+    <div class="col-th" data-col="modified" onclick="sortBy('modified')">Modified</div>
+    <div class="col-th" style="justify-content:flex-end;cursor:default;">Actions</div>
+  </div>
+
+  <!-- File list -->
+  <div class="file-list" id="file-list"></div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-item">Items: <span id="stat-count">0</span></div>
+    <div class="status-item">Size: <span id="stat-size">0 B</span></div>
+    <div class="status-item status-sel" id="stat-sel" style="display:none">
+      <span id="stat-sel-text"></span> selected
+    </div>
+  </div>
+</div>
+
+<!-- New folder modal -->
+<div class="modal-backdrop" id="modal-new-folder">
+  <div class="modal">
+    <div class="modal-header">New folder</div>
+    <div class="modal-body">
+      <label>Folder name</label>
+      <input type="text" id="new-folder-name" placeholder="my-folder" autocomplete="off" spellcheck="false"
+             onkeydown="if(event.key==='Enter') confirmNewFolder()"/>
+    </div>
+    <div class="modal-footer">
+      <button class="tbtn" onclick="closeModal('modal-new-folder')">Cancel</button>
+      <button class="tbtn primary" onclick="confirmNewFolder()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename modal -->
+<div class="modal-backdrop" id="modal-rename">
+  <div class="modal">
+    <div class="modal-header">Rename</div>
+    <div class="modal-body">
+      <label>New name</label>
+      <input type="text" id="rename-value" autocomplete="off" spellcheck="false"
+             onkeydown="if(event.key==='Enter') confirmRename()"/>
+    </div>
+    <div class="modal-footer">
+      <button class="tbtn" onclick="closeModal('modal-rename')">Cancel</button>
+      <button class="tbtn primary" onclick="confirmRename()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Sample data ──────────────────────────────────────────────────────────────
+const FS = {
+  '/': [
+    { name: 'keytabs',    type: 'folder', size: null,      modified: '2026-04-10 09:12' },
+    { name: 'configs',    type: 'folder', size: null,      modified: '2026-05-01 14:33' },
+    { name: 'logs',       type: 'folder', size: null,      modified: '2026-05-09 08:00' },
+    { name: 'samm.conf',  type: 'file',   size: 4210,      modified: '2026-05-03 11:44', ext: 'conf'  },
+    { name: 'samm.log',   type: 'file',   size: 182400,    modified: '2026-05-11 07:58', ext: 'log'   },
+    { name: 'README.md',  type: 'file',   size: 3120,      modified: '2026-03-22 16:00', ext: 'md'    },
+  ],
+  '/keytabs': [
+    { name: 'http.keytab',    type: 'file', size: 1024,  modified: '2026-04-10 09:12', ext: 'keytab' },
+    { name: 'admin.keytab',   type: 'file', size: 1280,  modified: '2026-04-08 14:00', ext: 'keytab' },
+    { name: 'service.keytab', type: 'file', size: 960,   modified: '2026-03-30 10:22', ext: 'keytab' },
+  ],
+  '/configs': [
+    { name: 'dev',            type: 'folder', size: null,  modified: '2026-05-01 14:33' },
+    { name: 'prod',           type: 'folder', size: null,  modified: '2026-05-01 14:33' },
+    { name: 'defaults.yaml',  type: 'file',   size: 8800,  modified: '2026-04-22 09:15', ext: 'yaml' },
+  ],
+  '/configs/dev': [
+    { name: 'samm-dev.conf',  type: 'file', size: 3200, modified: '2026-04-30 16:11', ext: 'conf' },
+    { name: 'secrets.env',    type: 'file', size: 512,  modified: '2026-04-29 10:00', ext: 'env'  },
+  ],
+  '/configs/prod': [
+    { name: 'samm-prod.conf', type: 'file', size: 4400, modified: '2026-05-01 14:32', ext: 'conf' },
+    { name: 'secrets.env',    type: 'file', size: 640,  modified: '2026-05-01 14:33', ext: 'env'  },
+  ],
+  '/logs': [
+    { name: 'samm-2026-05-11.log', type: 'file', size: 182400, modified: '2026-05-11 07:58', ext: 'log' },
+    { name: 'samm-2026-05-10.log', type: 'file', size: 204800, modified: '2026-05-10 23:59', ext: 'log' },
+    { name: 'samm-2026-05-09.log', type: 'file', size: 190000, modified: '2026-05-09 23:58', ext: 'log' },
+  ],
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let currentPath  = '/';
+let sortCol      = 'name';
+let sortAsc      = true;
+let selected     = new Set();
+let renameTarget = null;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function formatSize(bytes) {
+  if (bytes === null) return '—';
+  if (bytes < 1024)        return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function totalSize(files) {
+  return files.reduce((s, f) => s + (f.size || 0), 0);
+}
+
+function extColor(ext) {
+  const map = {
+    keytab: ['#f18b34', 'rgba(241,139,52,.15)'],
+    conf:   ['#3d8ef8', 'rgba(61,142,248,.15)'],
+    yaml:   ['#3d8ef8', 'rgba(61,142,248,.15)'],
+    env:    ['#fade2a', 'rgba(250,222,42,.12)'],
+    log:    ['#73bf69', 'rgba(115,191,105,.12)'],
+    md:     ['#9fa8b5', 'rgba(159,168,181,.12)'],
+  };
+  return map[ext] || ['#9fa8b5', 'rgba(159,168,181,.12)'];
+}
+
+function fileIcon(item) {
+  if (item.type === 'folder') {
+    return `<svg width="16" height="16" fill="#3d8ef8" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+  }
+  const colors = { log:'#73bf69', keytab:'#f18b34', conf:'#3d8ef8', yaml:'#3d8ef8', env:'#fade2a', md:'#9fa8b5' };
+  const c = colors[item.ext] || '#5c6370';
+  return `<svg width="15" height="15" fill="none" stroke="${c}" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
+
+// ── Breadcrumb ───────────────────────────────────────────────────────────────
+function renderBreadcrumb() {
+  const bar = document.getElementById('path-bar');
+  const segs = currentPath === '/' ? [''] : currentPath.split('/');
+  let html = `<span class="path-seg${currentPath==='/'?' current':''}" onclick="navigate('/')">~</span>`;
+  let built = '';
+  for (let i = 1; i < segs.length; i++) {
+    built += '/' + segs[i];
+    const isCurrent = (i === segs.length - 1);
+    const p = built;
+    html += `<span class="path-sep">/</span>`;
+    html += `<span class="path-seg${isCurrent?' current':''}" onclick="navigate('${p}')">${segs[i]}</span>`;
+  }
+  bar.innerHTML = html;
+  document.getElementById('current-path-display').textContent = 'samm.datasource / filesystem' + currentPath;
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function renderFiles() {
+  const query  = document.getElementById('search-input').value.toLowerCase();
+  let   items  = (FS[currentPath] || []).filter(f => f.name.toLowerCase().includes(query));
+
+  // Sort: folders first, then by column
+  items.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+    let av = a[sortCol], bv = b[sortCol];
+    if (av === null) av = 0;
+    if (bv === null) bv = 0;
+    if (typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return sortAsc ? av - bv : bv - av;
+  });
+
+  const list = document.getElementById('file-list');
+
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <p>${query ? 'No files match your search.' : 'This folder is empty.'}</p>
+    </div>`;
+  } else {
+    list.innerHTML = items.map(item => {
+      const id  = currentPath + '/' + item.name;
+      const sel = selected.has(id);
+      const [ec, ebg] = item.ext ? extColor(item.ext) : ['', ''];
+      const badge = item.ext
+        ? `<span class="file-ext-badge" style="color:${ec};background:${ebg}">${item.ext.toUpperCase()}</span>`
+        : '';
+      return `
+      <div class="file-row${sel?' selected':''}" data-id="${id}" data-type="${item.type}"
+           onclick="rowClick(event,'${id}','${item.type}','${item.name}')">
+        <input type="checkbox" class="file-check" ${sel?'checked':''} onclick="event.stopPropagation();toggleSelect('${id}')"/>
+        <div class="file-name">
+          <span class="file-icon">${fileIcon(item)}</span>
+          <span class="file-label${item.type==='folder'?' folder':''}">${item.name}</span>
+          ${badge}
+        </div>
+        <div class="col-size" style="text-align:right">${formatSize(item.size)}</div>
+        <div class="col-type">${item.type === 'folder' ? '—' : (item.ext || 'file').toUpperCase()}</div>
+        <div class="col-modified">${item.modified}</div>
+        <div class="row-actions">
+          <button class="row-btn" title="Rename" onclick="event.stopPropagation();openRenameModal('${id}','${item.name}')">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          ${item.type==='file'?`<button class="row-btn" title="Download" onclick="event.stopPropagation();alert('Downloading: ${item.name}')">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>`:''}
+          <button class="row-btn del" title="Delete" onclick="event.stopPropagation();deleteSingle('${id}','${item.name}')">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Stats
+  const allItems = FS[currentPath] || [];
+  document.getElementById('stat-count').textContent = allItems.length;
+  document.getElementById('stat-size').textContent  = formatSize(totalSize(allItems));
+  updateSelectionUI();
+  renderBreadcrumb();
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+function navigate(path) {
+  currentPath = path;
+  selected.clear();
+  document.getElementById('search-input').value = '';
+  renderFiles();
+}
+
+function rowClick(e, id, type, name) {
+  if (type === 'folder') {
+    const folderPath = currentPath === '/' ? '/' + name : currentPath + '/' + name;
+    // Only navigate if the folder has entries defined
+    if (FS[folderPath] !== undefined) {
+      navigate(folderPath);
+    } else {
+      navigate(folderPath);
+      FS[folderPath] = [];
+    }
+  }
+}
+
+// ── Selection ────────────────────────────────────────────────────────────────
+function toggleSelect(id) {
+  if (selected.has(id)) selected.delete(id);
+  else selected.add(id);
+  renderFiles();
+}
+
+function toggleAll(cb) {
+  const items = FS[currentPath] || [];
+  if (cb.checked) {
+    items.forEach(f => selected.add(currentPath + '/' + f.name));
+  } else {
+    items.forEach(f => selected.delete(currentPath + '/' + f.name));
+  }
+  renderFiles();
+}
+
+function updateSelectionUI() {
+  const n = selected.size;
+  document.getElementById('btn-delete-sel').disabled   = n === 0;
+  document.getElementById('btn-download-sel').disabled = n === 0;
+  const sel = document.getElementById('stat-sel');
+  if (n > 0) {
+    sel.style.display = 'block';
+    document.getElementById('stat-sel-text').textContent = n + (n===1?' item':' items');
+  } else {
+    sel.style.display = 'none';
+  }
+  const allItems = FS[currentPath] || [];
+  const cb = document.getElementById('check-all');
+  cb.checked       = n > 0 && allItems.every(f => selected.has(currentPath+'/'+f.name));
+  cb.indeterminate = n > 0 && !cb.checked;
+}
+
+// ── Sort ─────────────────────────────────────────────────────────────────────
+function sortBy(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  document.querySelectorAll('.col-th').forEach(th => th.classList.remove('sorted'));
+  const active = document.querySelector(`.col-th[data-col="${col}"]`);
+  if (active) active.classList.add('sorted');
+  renderFiles();
+}
+
+// ── Delete ───────────────────────────────────────────────────────────────────
+function deleteSingle(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  FS[currentPath] = (FS[currentPath] || []).filter(f => currentPath + '/' + f.name !== id);
+  selected.delete(id);
+  renderFiles();
+}
+
+function deleteSelected() {
+  if (!confirm(`Delete ${selected.size} item(s)?`)) return;
+  selected.forEach(id => {
+    const name = id.split('/').pop();
+    FS[currentPath] = (FS[currentPath] || []).filter(f => f.name !== name);
+  });
+  selected.clear();
+  renderFiles();
+}
+
+// ── Download ─────────────────────────────────────────────────────────────────
+function downloadSelected() {
+  alert(`Downloading ${selected.size} item(s)…\n(wire up to your actual endpoint)`);
+}
+
+// ── Upload ───────────────────────────────────────────────────────────────────
+function handleUpload(input) {
+  const files = Array.from(input.files);
+  files.forEach(f => {
+    const ext  = f.name.includes('.') ? f.name.split('.').pop().toLowerCase() : null;
+    const existing = (FS[currentPath] || []).find(e => e.name === f.name);
+    if (!existing) {
+      FS[currentPath] = FS[currentPath] || [];
+      FS[currentPath].push({
+        name:     f.name,
+        type:     'file',
+        size:     f.size,
+        modified: new Date().toISOString().slice(0,16).replace('T',' '),
+        ext,
+      });
+    }
+  });
+  input.value = '';
+  renderFiles();
+}
+
+// ── Drag & drop upload ───────────────────────────────────────────────────────
+const panel = document.getElementById('panel');
+panel.addEventListener('dragenter', e => { e.preventDefault(); panel.classList.add('drag-over'); });
+panel.addEventListener('dragover',  e => { e.preventDefault(); });
+panel.addEventListener('dragleave', e => { if (!panel.contains(e.relatedTarget)) panel.classList.remove('drag-over'); });
+panel.addEventListener('drop', e => {
+  e.preventDefault();
+  panel.classList.remove('drag-over');
+  const input = document.getElementById('upload-input');
+  // Simulate: just read file names from dataTransfer
+  const files = Array.from(e.dataTransfer.files);
+  files.forEach(f => {
+    const ext = f.name.includes('.') ? f.name.split('.').pop().toLowerCase() : null;
+    if (!(FS[currentPath] || []).find(e => e.name === f.name)) {
+      FS[currentPath] = FS[currentPath] || [];
+      FS[currentPath].push({ name: f.name, type: 'file', size: f.size,
+        modified: new Date().toISOString().slice(0,16).replace('T',' '), ext });
+    }
+  });
+  renderFiles();
+});
+
+// ── New folder modal ─────────────────────────────────────────────────────────
+function openNewFolderModal() {
+  document.getElementById('new-folder-name').value = '';
+  document.getElementById('modal-new-folder').classList.add('open');
+  setTimeout(() => document.getElementById('new-folder-name').focus(), 50);
+}
+
+function confirmNewFolder() {
+  const name = document.getElementById('new-folder-name').value.trim();
+  if (!name) return;
+  if ((FS[currentPath] || []).find(f => f.name === name)) {
+    alert('A file or folder with that name already exists.');
+    return;
+  }
+  FS[currentPath] = FS[currentPath] || [];
+  FS[currentPath].unshift({ name, type: 'folder', size: null,
+    modified: new Date().toISOString().slice(0,16).replace('T',' ') });
+  const folderPath = currentPath === '/' ? '/' + name : currentPath + '/' + name;
+  FS[folderPath] = [];
+  closeModal('modal-new-folder');
+  renderFiles();
+}
+
+// ── Rename modal ─────────────────────────────────────────────────────────────
+function openRenameModal(id, name) {
+  renameTarget = { id, name };
+  document.getElementById('rename-value').value = name;
+  document.getElementById('modal-rename').classList.add('open');
+  setTimeout(() => {
+    const inp = document.getElementById('rename-value');
+    inp.focus();
+    const dot = name.lastIndexOf('.');
+    inp.setSelectionRange(0, dot > 0 ? dot : name.length);
+  }, 50);
+}
+
+function confirmRename() {
+  const newName = document.getElementById('rename-value').value.trim();
+  if (!newName || !renameTarget) return;
+  const file = (FS[currentPath] || []).find(f => f.name === renameTarget.name);
+  if (file) {
+    file.name = newName;
+    if (file.type === 'folder') {
+      const oldPath = currentPath === '/' ? '/' + renameTarget.name : currentPath + '/' + renameTarget.name;
+      const newPath = currentPath === '/' ? '/' + newName : currentPath + '/' + newName;
+      if (FS[oldPath] !== undefined) { FS[newPath] = FS[oldPath]; delete FS[oldPath]; }
+    } else {
+      file.ext = newName.includes('.') ? newName.split('.').pop().toLowerCase() : null;
+    }
+  }
+  selected.delete(renameTarget.id);
+  renameTarget = null;
+  closeModal('modal-rename');
+  renderFiles();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+renderFiles();
+</script>
+</body>
+</html>

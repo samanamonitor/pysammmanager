@@ -11,9 +11,6 @@ log.setLevel(os.environ.get("LOGLEVEL", "WARN"))
 class NotAuthorized(Exception):
 	pass
 
-def check_session(env):
-	return True
-
 def application(env, start_response):
 	path_info = env.get('PATH_INFO')
 	query_string = {}
@@ -25,8 +22,6 @@ def application(env, start_response):
 
 	log.info("Requests received. data=%s", env)
 	try:
-		if not check_session(env):
-			raise NotAuthorized
 		_, _, func_name = path_info.rpartition('/')
 		func = getattr(sammmanager, func_name)
 		status, headers, body = func(**query_string)
