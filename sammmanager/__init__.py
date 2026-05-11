@@ -172,9 +172,16 @@ def private(**kwargs):
 
 	items=[]
 	privatepath=Path("/private")
+	first = True
 	for f in privatepath.iterdir():
 		if f.is_file():
-			items.append(f"{{ name: '{f.name}', type: 'file', size: {f.stat().st_size}, modified: '{f.stat().st_mtime}'}},")
+			line = ""
+			if first:
+				first = False
+			else:
+				line += ","
+			line+=f"{{ name: '{f.name}', type: 'file', size: {f.stat().st_size}, modified: '{f.stat().st_mtime}'}}"
+			items.append(line)
 
 	body = temp.render(name="Hello", items=items).encode("utf8")
 	return ("200 OK",
