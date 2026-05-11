@@ -529,6 +529,9 @@
 // ── Sample data ──────────────────────────────────────────────────────────────
 const FS = {
   '/': [
+    {% for item in items %}
+    {{item}}
+    {% endfor %}
     { name: 'keytabs',    type: 'folder', size: null,      modified: '2026-04-10 09:12' },
     { name: 'configs',    type: 'folder', size: null,      modified: '2026-05-01 14:33' },
     { name: 'logs',       type: 'folder', size: null,      modified: '2026-05-09 08:00' },

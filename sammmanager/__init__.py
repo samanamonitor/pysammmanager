@@ -170,7 +170,11 @@ def private(**kwargs):
 	with filepath.open("r") as f:
 		temp = Template(f.read())
 
-	body = temp.render(name="Hello").encode("utf8")
+	items=[]
+	name='file1.txt'
+	items.append(f"{{ name: '{name}', type: 'file', size: 1, modified: '2026-04-10 09:12'}},")
+
+	body = temp.render(name="Hello", items=items).encode("utf8")
 	return ("200 OK",
 		[
 			("Content-Type", "text/html; charset=utf-8"),
