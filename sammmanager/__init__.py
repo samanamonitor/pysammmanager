@@ -3,6 +3,7 @@ __version__ = "0.0.1"
 try:
 	from .vcentersession import VCenterSession
 	from .rdp import rdp_file
+	from jinja2 import Template
 except:
 	pass
 
@@ -12,7 +13,6 @@ import logging
 from . import tokens
 import json
 from pathlib import Path
-from jinja2 import Template
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stderr)
