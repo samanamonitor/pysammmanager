@@ -163,7 +163,7 @@ def gettoken(**kwargs):
 		], [body.encode('utf-8')])
 
 def private(**kwargs):
-		with open("/app/samm-file-manager.html", "rb") as f:
+	with open("/app/samm-file-manager.html", "rb") as f:
 		body = f.read()
 
 	return ("200 OK",
