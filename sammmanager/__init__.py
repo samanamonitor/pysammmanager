@@ -164,7 +164,8 @@ def gettoken(**kwargs):
 		], [body.encode('utf-8')])
 
 def private(**kwargs):
-	with open(Path(__file__).parent + "docs/samm-file-manager.html", "rb") as f:
+	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
+	with filepath.open("rb") as f:
 		body = f.read()
 
 	return ("200 OK",
