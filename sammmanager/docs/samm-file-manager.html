@@ -532,36 +532,6 @@ const FS = {
     {% for item in items %}
     {{item}}
     {% endfor %}
-    { name: 'keytabs',    type: 'folder', size: null,      modified: '2026-04-10 09:12' },
-    { name: 'configs',    type: 'folder', size: null,      modified: '2026-05-01 14:33' },
-    { name: 'logs',       type: 'folder', size: null,      modified: '2026-05-09 08:00' },
-    { name: 'samm.conf',  type: 'file',   size: 4210,      modified: '2026-05-03 11:44', ext: 'conf'  },
-    { name: 'samm.log',   type: 'file',   size: 182400,    modified: '2026-05-11 07:58', ext: 'log'   },
-    { name: 'README.md',  type: 'file',   size: 3120,      modified: '2026-03-22 16:00', ext: 'md'    },
-  ],
-  '/keytabs': [
-    { name: 'http.keytab',    type: 'file', size: 1024,  modified: '2026-04-10 09:12', ext: 'keytab' },
-    { name: 'admin.keytab',   type: 'file', size: 1280,  modified: '2026-04-08 14:00', ext: 'keytab' },
-    { name: 'service.keytab', type: 'file', size: 960,   modified: '2026-03-30 10:22', ext: 'keytab' },
-  ],
-  '/configs': [
-    { name: 'dev',            type: 'folder', size: null,  modified: '2026-05-01 14:33' },
-    { name: 'prod',           type: 'folder', size: null,  modified: '2026-05-01 14:33' },
-    { name: 'defaults.yaml',  type: 'file',   size: 8800,  modified: '2026-04-22 09:15', ext: 'yaml' },
-  ],
-  '/configs/dev': [
-    { name: 'samm-dev.conf',  type: 'file', size: 3200, modified: '2026-04-30 16:11', ext: 'conf' },
-    { name: 'secrets.env',    type: 'file', size: 512,  modified: '2026-04-29 10:00', ext: 'env'  },
-  ],
-  '/configs/prod': [
-    { name: 'samm-prod.conf', type: 'file', size: 4400, modified: '2026-05-01 14:32', ext: 'conf' },
-    { name: 'secrets.env',    type: 'file', size: 640,  modified: '2026-05-01 14:33', ext: 'env'  },
-  ],
-  '/logs': [
-    { name: 'samm-2026-05-11.log', type: 'file', size: 182400, modified: '2026-05-11 07:58', ext: 'log' },
-    { name: 'samm-2026-05-10.log', type: 'file', size: 204800, modified: '2026-05-10 23:59', ext: 'log' },
-    { name: 'samm-2026-05-09.log', type: 'file', size: 190000, modified: '2026-05-09 23:58', ext: 'log' },
-  ],
 };
 
 // ── State ────────────────────────────────────────────────────────────────────
