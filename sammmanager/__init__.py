@@ -11,6 +11,7 @@ import os
 import logging
 from . import tokens
 import json
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stderr)
@@ -138,7 +139,7 @@ def updatecreds(**kwargs):
 			file.write("CIM_METHOD=kerberos\n")
 		log.info("creating keytab")
 
-	with open("/app/samm-update-credentials.html", "rb") as f:
+	with open("docs/samm-update-credentials.html", "rb") as f:
 		body = f.read()
 
 	return ("200 OK",
@@ -163,7 +164,7 @@ def gettoken(**kwargs):
 		], [body.encode('utf-8')])
 
 def private(**kwargs):
-	with open("/app/samm-file-manager.html", "rb") as f:
+	with open(Path(__file__).parent + "docs/samm-file-manager.html", "rb") as f:
 		body = f.read()
 
 	return ("200 OK",
