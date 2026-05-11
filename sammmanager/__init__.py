@@ -12,7 +12,7 @@ import logging
 from . import tokens
 import json
 from pathlib import Path
-from string import Template
+from jinja2 import Template
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stderr)
@@ -170,7 +170,7 @@ def private(**kwargs):
 	with filepath.open("r") as f:
 		temp = Template(f.read())
 
-	body = temp.substitute(name="Hello")
+	body = temp.render(name="Hello")
 	return ("200 OK",
 		[
 			("Content-Type", "text/html; charset=utf-8"),
