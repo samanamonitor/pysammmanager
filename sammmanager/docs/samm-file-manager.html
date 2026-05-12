@@ -839,11 +839,11 @@ function confirmRename() {
       file.ext = newName.includes('.') ? newName.split('.').pop().toLowerCase() : null;
     }
   }
+  renameFile(renameTarget.name, newName)
   selected.delete(renameTarget.id);
   renameTarget = null;
   closeModal('modal-rename');
 
-  renameFile(renameTarget.name, newName)
   renderFiles();
 }
 
