@@ -175,6 +175,9 @@ def private(**kwargs):
 		if old_name == "" or new_name == "":
 			raise Exception("Invalid parameters")
 		return rename_file(old_name, new_name)
+	elif action == "list":
+		return list_file()
+
 	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
 	with filepath.open("r") as f:
 		temp = Template(f.read())
@@ -198,6 +201,15 @@ def private(**kwargs):
 def rename_file(old_name, new_name):
 	log.debug("Renaming file %s to %s", old_name, new_name)
 	out = { "error": "", "details": "File renamed"}
+	body = json.dumps(out).encode("utf-8")
+	return ("200 OK",
+		[
+			("Content-Type", "application/json; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)
+
+def list_file():
+	out = []
 	body = json.dumps(out).encode("utf-8")
 	return ("200 OK",
 		[

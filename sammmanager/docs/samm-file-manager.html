@@ -655,6 +655,22 @@ function renderFiles() {
   renderBreadcrumb();
 }
 
+// ── ListFiles  ───────────────────────────────────────────────────────────────
+function listFiles() {
+  const formData = new FormData();
+  formData.append("action",   "list");
+
+  const response = await fetch("/manager/private", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Rename failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
 // ── Navigation ───────────────────────────────────────────────────────────────
 function navigate(path) {
   currentPath = path;
@@ -843,12 +859,11 @@ function confirmRename() {
   selected.delete(renameTarget.id);
   renameTarget = null;
   closeModal('modal-rename');
-
   renderFiles();
 }
 
 async function renameFile(oldName, newName) {
-const formData = new FormData();
+  const formData = new FormData();
   formData.append("action",   "rename");
   formData.append("old_name", oldName);
   formData.append("new_name", newName);
