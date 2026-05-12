@@ -199,7 +199,13 @@ def private(**kwargs):
 
 def rename_file(old_name, new_name):
 	log.debug("Renaming file %s to %s", old_name, new_name)
-	out = { "error": "", "details": "File renamed"}
+	old_path = Path("/private") / old_name
+	new_path = Path("/private") / new_name
+	try:
+		old_path.rename(new_path)
+		out = { "error": "", "details": "File renamed"}
+	except Exception as e:
+		out = { "error": str(e), "details": f"Couldn't rename '{old_name}' to '{new_name}'"}
 	body = json.dumps(out).encode("utf-8")
 	return ("200 OK",
 		[
