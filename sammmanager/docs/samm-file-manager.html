@@ -802,7 +802,7 @@ async function handleUpload(input) {
   const files = Array.from(input.files);
 
   files.forEach(f => {
-    formData.append("files", file, file.name);
+    formData.append("files", f, f.name);
     /*
     const fileContent = await file.arrayBuffer();
 
