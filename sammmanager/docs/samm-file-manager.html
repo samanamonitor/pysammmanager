@@ -744,7 +744,7 @@ function deleteSelected() {
 
 // ── Download ─────────────────────────────────────────────────────────────────
 function downloadSelected() {
-  alert(`Downloading ${selected.size} item(s)…\n(wire up to your actual endpoint)`);
+  selected.forEach(f => downloadFile(f));
 }
 
 async function downloadFile(fileName) {
