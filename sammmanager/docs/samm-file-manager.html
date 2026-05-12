@@ -739,8 +739,24 @@ function sortBy(col) {
 // ── Delete ───────────────────────────────────────────────────────────────────
 function deleteSingle(id, name) {
   if (!confirm(`Delete "${name}"?`)) return;
+  /*
   FS[currentPath] = (FS[currentPath] || []).filter(f => currentPath + '/' + f.name !== id);
   selected.delete(id);
+  */
+  const formData = new FormData();
+  formData.append("action",   "delete");
+  formData.append("file_name", name);
+
+  const response = await fetch("/manager/private", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Delete failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
   renderFiles();
 }
 
