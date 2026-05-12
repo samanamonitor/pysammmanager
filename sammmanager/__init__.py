@@ -13,6 +13,7 @@ from . import tokens
 import json
 from pathlib import Path
 from datetime import datetime
+from email.message import Message
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stderr)
@@ -269,7 +270,9 @@ def delete_file(file_name):
 def upload_files(files):
 	for k, v in files.items():
 		log.debug("Files to upload k='%s' v='%s' content_disposition='%s'", k, v, v.disposition.__class__)
-		#v.save_as("/private")
+		msg = Message()
+		msg['Content-Disposition'] = v.disposition
+		v.save_as(Path("/private") / msg.get_filename())
 	body = json.dumps({ "error": "", "details": "Files Uploaded"}).encode("utf-8")
 	return ("200 OK",
 		[
