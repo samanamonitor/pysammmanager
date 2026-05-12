@@ -184,7 +184,6 @@ def private(**kwargs):
 
 	items=[]
 	privatepath=Path("/private")
-	first = True
 	for f in privatepath.iterdir():
 		if f.is_file():
 			modified = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
@@ -209,8 +208,15 @@ def rename_file(old_name, new_name):
 		], body)
 
 def list_file():
-	out = []
-	body = json.dumps(out).encode("utf-8")
+	items=[]
+	privatepath=Path("/private")
+	for f in privatepath.iterdir():
+		if f.is_file():
+			modified = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+			file={ "name": f.name, "type": "file", "size": f.stat().st_size, "modified": modified}
+			items.append(file)
+
+	body = json.dumps(items).encode("utf-8")
 	return ("200 OK",
 		[
 			("Content-Type", "application/json; charset=utf-8"),
