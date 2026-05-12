@@ -526,6 +526,10 @@
 </div>
 
 <script>
+// ── Sample data ──────────────────────────────────────────────────────────────
+const FS = {
+  '/': []
+};
 
 // ── State ────────────────────────────────────────────────────────────────────
 let currentPath  = '/';
@@ -586,8 +590,9 @@ function renderBreadcrumb() {
 
 // ── Render ───────────────────────────────────────────────────────────────────
 async function renderFiles() {
+  FS[currentPath] = await listFiles()
   const query  = document.getElementById('search-input').value.toLowerCase();
-  let   items  = (await listFiles() || []).filter(f => f.name.toLowerCase().includes(query));
+  let   items  = (FS[currentPath] || []).filter(f => f.name.toLowerCase().includes(query));
 
   // Sort: folders first, then by column
   items.sort((a, b) => {
