@@ -268,8 +268,8 @@ def delete_file(file_name):
 
 def upload_files(files):
 	for k, v in files.items():
-		log.debug("Files to upload k='%s' v='%s' content_disposition='%s'", k, v, v.disposition)
-		v.save_as("/private")
+		log.debug("Files to upload k='%s' v='%s' content_disposition='%s'", k, v, v.disposition.__class__)
+		#v.save_as("/private")
 	body = json.dumps({ "error": "", "details": "Files Uploaded"}).encode("utf-8")
 	return ("200 OK",
 		[
