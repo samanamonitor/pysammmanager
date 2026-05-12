@@ -698,7 +698,7 @@ function updateSelectionUI() {
   }
   const allItems = FS[currentPath] || [];
   const cb = document.getElementById('check-all');
-  cb.checked       = n > 0 && allItems.every(f => selected.has(currentPath+'/'+f.name));
+  cb.checked       = n > 0 && allItems.every(f => selected.has(f.name));
   cb.indeterminate = n > 0 && !cb.checked;
 }
 
