@@ -267,7 +267,8 @@ def delete_file(file_name):
 		], body)
 
 def upload_files(files):
-	log.debug("Files to upload files='%s'", files.__class__)
+	for k, v in files.items():
+		log.debug("Files to upload k='%s' v='%s'", k, v)
 	body = json.dumps({ "error": "", "details": "Files Uploaded"}).encode("utf-8")
 	return ("200 OK",
 		[
