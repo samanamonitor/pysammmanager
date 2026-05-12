@@ -848,16 +848,14 @@ function confirmRename() {
 }
 
 async function renameFile(oldName, newName) {
+const formData = new FormData();
+  formData.append("action",   "rename");
+  formData.append("old_name", oldName);
+  formData.append("new_name", newName);
+
   const response = await fetch("/private", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      action:   "rename",
-      old_name: oldName,
-      new_name: newName,
-    }),
+    body:   formData,
   });
 
   if (!response.ok) {
