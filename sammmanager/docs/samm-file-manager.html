@@ -801,11 +801,11 @@ async function handleUpload(input) {
 
   const files = Array.from(input.files);
 
-  files.forEach(f => {
+  for (const f of input.files) {
     const fileContent = await f.arrayBuffer();
 
     formData.append(f.name,   new Blob([fileContent], { f: "application/octet-stream" }), f.name);
-  });
+  }
   const response = await fetch("/manager/private", {
     method: "POST",
     body:   formData,
@@ -814,23 +814,7 @@ async function handleUpload(input) {
   if (!response.ok) {
     throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
   }
-  input.value = '';    
-  /*
-    const ext  = f.name.includes('.') ? f.name.split('.').pop().toLowerCase() : null;
-    const existing = (FS[currentPath] || []).find(e => e.name === f.name);
-    if (!existing) {
-      FS[currentPath] = FS[currentPath] || [];
-      FS[currentPath].push({
-        name:     f.name,
-        type:     'file',
-        size:     f.size,
-        modified: new Date().toISOString().slice(0,16).replace('T',' '),
-        ext,
-      });
-    }
-  });
   input.value = '';
-  */
 
   renderFiles(true);
   return response.json();
