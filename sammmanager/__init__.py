@@ -13,6 +13,7 @@ import logging
 from . import tokens
 import json
 from pathlib import Path
+from datetime import datetime
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stderr)
@@ -175,7 +176,8 @@ def private(**kwargs):
 	first = True
 	for f in privatepath.iterdir():
 		if f.is_file():
-			line=f"{{ name: '{f.name}', type: 'file', size: {f.stat().st_size}, modified: '{f.stat().st_mtime}'}},"
+			modified = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+			line=f"{{ name: '{f.name}', type: 'file', size: {f.stat().st_size}, modified: '{modified}'}},"
 			items.append(line)
 
 	body = temp.render(name="Hello", items=items).encode("utf8")
