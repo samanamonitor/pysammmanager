@@ -591,9 +591,9 @@ function renderBreadcrumb() {
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────
-function renderFiles() {
+async function renderFiles() {
   const query  = document.getElementById('search-input').value.toLowerCase();
-  let   items  = (listFiles() || []).filter(f => f.name.toLowerCase().includes(query));
+  let   items  = (await listFiles() || []).filter(f => f.name.toLowerCase().includes(query));
 
   // Sort: folders first, then by column
   items.sort((a, b) => {
