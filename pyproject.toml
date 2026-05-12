@@ -4,5 +4,5 @@ requires = [ "setuptools>=60", "setuptools-scm>=8.0" ]
 [project]
 name = "sammmanager"
 dynamic = [ "version" ]
-dependencies = [ "uwsgi", "urllib3", "multipart", "python-multipart", "jinja2" ]
+dependencies = [ "uwsgi", "urllib3", "multipart", "python-multipart" ]
 

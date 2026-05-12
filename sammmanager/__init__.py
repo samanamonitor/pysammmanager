@@ -3,7 +3,6 @@ __version__ = "0.0.1"
 try:
 	from .vcentersession import VCenterSession
 	from .rdp import rdp_file
-	from jinja2 import Template
 except:
 	pass
 
