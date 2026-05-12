@@ -181,13 +181,12 @@ def private(**kwargs):
 		file_name=kwargs.get("file_name", "")
 		if file_name == "":
 			raise Exception("Invalid file_name")
-
 		return download_file(file_name)
+
 	elif action == "delete":
 		file_name=kwargs.get("file_name", "")
 		if file_name == "":
 			raise Exception("Invalid file_name")
-
 		return delete_file(file_name)
 
 
@@ -260,7 +259,8 @@ def delete_file(file_name):
 		filepath.unlink()
 		out = { "error": "", "details": f"File {file_name} deleted"}
 	except Exception as e:
-		out = { "error": str(e), "details": f"Couldn't delete '{file_name}'"}
+		log.error("Could not delete file '%s'. error='%s'", str(filepath), str(e))
+		out = { "error": str(e), "details": f"Couldn't delete '{str(file_name)}'"}
 
 	body = json.dumps(out).encode("utf-8")
 	return ("200 OK",
