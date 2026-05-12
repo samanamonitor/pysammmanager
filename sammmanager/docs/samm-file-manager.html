@@ -613,7 +613,7 @@ async function renderFiles() {
     </div>`;
   } else {
     list.innerHTML = items.map(item => {
-      const id  = currentPath + '/' + item.name;
+      const id  = item.name;
       const sel = selected.has(id);
       const [ec, ebg] = item.ext ? extColor(item.ext) : ['', ''];
       const badge = item.ext
