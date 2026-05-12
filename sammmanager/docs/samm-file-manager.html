@@ -842,7 +842,29 @@ function confirmRename() {
   selected.delete(renameTarget.id);
   renameTarget = null;
   closeModal('modal-rename');
+
+  renameFile(renameTarget.name, newName)
   renderFiles();
+}
+
+async function renameFile(oldName, newName) {
+  const response = await fetch("/private", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      action:   "rename",
+      old_name: oldName,
+      new_name: newName,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Rename failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
 }
 
 function closeModal(id) {
