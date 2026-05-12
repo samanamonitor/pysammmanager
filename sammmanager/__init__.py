@@ -167,7 +167,7 @@ def gettoken(**kwargs):
 		], [body.encode('utf-8')])
 
 def private(**kwargs):
-	log.debug("Private request: kwargs='$s'", str(kwargs))
+	log.debug("Private request: kwargs='%s'", str(kwargs))
 	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
 	with filepath.open("r") as f:
 		temp = Template(f.read())
