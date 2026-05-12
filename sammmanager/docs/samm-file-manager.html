@@ -737,7 +737,7 @@ function sortBy(col) {
 }
 
 // ── Delete ───────────────────────────────────────────────────────────────────
-function deleteSingle(id, name) {
+async function deleteSingle(id, name) {
   if (!confirm(`Delete "${name}"?`)) return;
   /*
   FS[currentPath] = (FS[currentPath] || []).filter(f => currentPath + '/' + f.name !== id);
