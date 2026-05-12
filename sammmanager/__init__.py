@@ -258,7 +258,7 @@ def delete_file(file_name):
 	filepath = Path("/private") / file_name
 	try:
 		filepath.unlink()
-		out = { "error": "", "details": "File renamed"}
+		out = { "error": "", "details": f"File {file_name} deleted"}
 	except Exception as e:
 		out = { "error": str(e), "details": f"Couldn't delete '{file_name}'"}
 

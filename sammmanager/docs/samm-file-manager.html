@@ -756,8 +756,8 @@ async function deleteSingle(id, name) {
     throw new Error(`Delete failed: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
   renderFiles();
+  return response.json();
 }
 
 function deleteSelected() {
