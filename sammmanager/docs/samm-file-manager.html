@@ -856,7 +856,7 @@ function confirmNewFolder() {
   const folderPath = currentPath === '/' ? '/' + name : currentPath + '/' + name;
   FS[folderPath] = [];
   closeModal('modal-new-folder');
-  renderFiles();
+  renderFiles(true);
 }
 
 // ── Rename modal ─────────────────────────────────────────────────────────────
@@ -921,7 +921,7 @@ document.querySelectorAll('.modal-backdrop').forEach(bd => {
 });
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-renderFiles();
+renderFiles(true);
 </script>
 </body>
 </html>
