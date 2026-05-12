@@ -759,9 +759,30 @@ function downloadSelected() {
   alert(`Downloading ${selected.size} item(s)…\n(wire up to your actual endpoint)`);
 }
 
-function downloadFile(filename) {
-  alert(`Downloading ${filename}.`)
+async function downloadFile(fileName) {
+  const formData = new FormData();
+  formData.append("action",    "download");
+  formData.append("file_name", fileName);
+
+  const response = await fetch("/manager/private", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+  }
+
+  const blob     = await response.blob();
+  const url      = URL.createObjectURL(blob);
+  const anchor   = document.createElement("a");
+  anchor.href     = url;
+  anchor.download = fileName;
+  anchor.click();
+
+  URL.revokeObjectURL(url);
 }
+
 // ── Upload ───────────────────────────────────────────────────────────────────
 function handleUpload(input) {
   const files = Array.from(input.files);

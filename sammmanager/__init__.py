@@ -228,3 +228,14 @@ def list_files():
 			("Content-Type", "application/json; charset=utf-8"),
 			("Content-Length", str(len(body))),
 		], body)
+
+def download_file(file_name):
+	filepath = Path("/private") / file_name
+	with filepath.open("rb") as f:
+		body = f.read()
+
+	return ("200 OK",
+		[
+			("Content-Type", "application/octet-stream"),
+			("Content-Length", str(len(body))),
+		], body)
