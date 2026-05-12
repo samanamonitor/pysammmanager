@@ -817,7 +817,7 @@ async function handleUpload(input) {
 
   const formData = new FormData();
   formData.append("action", "upload");
-  formData.append("files",   new Blob([fileContent], { "application/octet-stream" }), file.name);
+  formData.append("files",   new Blob([fileContent], { type: "application/octet-stream" }), file.name);
 
   const response = await fetch("/manager/private", {
     method: "POST",
