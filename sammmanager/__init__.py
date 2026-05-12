@@ -197,7 +197,7 @@ def private(**kwargs):
 
 def rename_file(old_name, new_name):
 	log.debug("Renaming file %s to %s", old_name, new_name)
-	out = { error: "", details: "File renamed"}
+	out = { "error": "", "details": "File renamed"}
 	body = json.dumps(out).encode("utf-8")
 	return ("200 OK",
 		[
