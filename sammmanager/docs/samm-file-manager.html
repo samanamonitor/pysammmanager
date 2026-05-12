@@ -529,9 +529,7 @@
 // ── Sample data ──────────────────────────────────────────────────────────────
 const FS = {
   '/': [
-    {% for item in items %}
-    {{item}}
-    {% endfor %}
+    {% for item in items %}{{item}}{% endfor %}
   ]
 };
 
