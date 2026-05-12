@@ -170,13 +170,20 @@ def private(**kwargs):
 	log.debug("Private request: kwargs='%s'", str(kwargs))
 	action = kwargs.get("action")
 	if action == "rename":
-		old_name=kwargs.get("old_name")
-		new_name=kwargs.get("new_name")
+		old_name=kwargs.get("old_name", "")
+		new_name=kwargs.get("new_name", "")
 		if old_name == "" or new_name == "":
 			raise Exception("Invalid parameters")
 		return rename_file(old_name, new_name)
 	elif action == "list":
 		return list_files()
+	elif action == "download":
+		file_name=kwargs.get("file_name", "")
+		if file_name == "":
+			raise Exception("Invalid file_name")
+
+		return download_file(file_name)
+
 
 	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
 	with filepath.open("r") as f:
