@@ -176,7 +176,7 @@ def private(**kwargs):
 			raise Exception("Invalid parameters")
 		return rename_file(old_name, new_name)
 	elif action == "list":
-		return list_file()
+		return list_files()
 
 	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
 	with filepath.open("r") as f:
@@ -207,7 +207,7 @@ def rename_file(old_name, new_name):
 			("Content-Length", str(len(body))),
 		], body)
 
-def list_file():
+def list_files():
 	items=[]
 	privatepath=Path("/private")
 	for f in privatepath.iterdir():

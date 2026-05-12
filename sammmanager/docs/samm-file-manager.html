@@ -593,7 +593,7 @@ function renderBreadcrumb() {
 // ── Render ───────────────────────────────────────────────────────────────────
 function renderFiles() {
   const query  = document.getElementById('search-input').value.toLowerCase();
-  let   items  = (FS[currentPath] || []).filter(f => f.name.toLowerCase().includes(query));
+  let   items  = (listFiles() || []).filter(f => f.name.toLowerCase().includes(query));
 
   // Sort: folders first, then by column
   items.sort((a, b) => {
@@ -671,6 +671,7 @@ async function listFiles() {
 
   return response.json();
 }
+
 // ── Navigation ───────────────────────────────────────────────────────────────
 function navigate(path) {
   currentPath = path;
