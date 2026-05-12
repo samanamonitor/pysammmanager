@@ -665,6 +665,8 @@ function rowClick(e, id, type, name) {
       navigate(folderPath);
       FS[folderPath] = [];
     }
+  } else {
+    toggleSelect(id);
   }
 }
 
