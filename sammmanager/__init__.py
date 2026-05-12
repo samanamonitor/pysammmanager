@@ -194,7 +194,7 @@ def private(**kwargs):
 
 	elif action == "upload":
 		files = kwargs.get("files", [])
-		if len(files) != 1:
+		if len(files) < 1:
 			raise Exception("Invalid parameters")
 		return upload_files(files)
 
