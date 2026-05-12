@@ -191,7 +191,7 @@ def private(**kwargs):
 
 
 	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
-	with filepath.open("r") as f:
+	with filepath.open("rb") as f:
 		body = f.read()
 
 	return ("200 OK",
