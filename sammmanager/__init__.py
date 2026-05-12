@@ -268,10 +268,8 @@ def delete_file(file_name):
 		], body)
 
 def upload_files(files):
-	filelist = files.get('files', [])
-	log.debug("filelist='%s' files='%s'", filelist.__class__, files.__class__)
-	for v in filelist:
-		log.debug("Files to upload v='%s' content_disposition='%s'", v, v.disposition)
+	for k, v in files.items():
+		log.debug("Files to upload k='%s' v='%s' content_disposition='%s'", k, v, v.disposition)
 		msg = Message()
 		msg['Content-Disposition'] = v.disposition
 		v.save_as(Path("/private") / msg.get_filename())

@@ -802,12 +802,9 @@ async function handleUpload(input) {
   const files = Array.from(input.files);
 
   files.forEach(f => {
-    formData.append("files", f, f.name);
-    /*
-    const fileContent = await file.arrayBuffer();
+    const fileContent = await f.arrayBuffer();
 
-    formData.append("files",   new Blob([fileContent], { type: "application/octet-stream" }), file.name);
-  */
+    formData.append(f.name,   new Blob([fileContent], { f: "application/octet-stream" }), f.name);
   });
   const response = await fetch("/manager/private", {
     method: "POST",
