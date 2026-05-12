@@ -638,7 +638,7 @@ async function renderFiles() {
           ${item.type==='file'?`<button class="row-btn" title="Download" onclick="event.stopPropagation();downloadFile('${item.name}')">
             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>`:''}
-          <button class="row-btn del" title="Delete" onclick="event.stopPropagation();deleteSingle('${id}','${item.name}')">
+          <button class="row-btn del" title="Delete" onclick="event.stopPropagation();deleteSingle('${id}','${item.name}', true)">
             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           </button>
         </div>
@@ -737,7 +737,7 @@ function sortBy(col) {
 }
 
 // ── Delete ───────────────────────────────────────────────────────────────────
-async function deleteSingle(id, name) {
+async function deleteSingle(id, name, render) {
   if (!confirm(`Delete "${name}"?`)) return;
   const formData = new FormData();
   formData.append("action",   "delete");
@@ -752,14 +752,14 @@ async function deleteSingle(id, name) {
     throw new Error(`Delete failed: ${response.status} ${response.statusText}`);
   }
 
-  renderFiles();
+  if (render) renderFiles();
   return response.json();
 }
 
 function deleteSelected() {
   if (!confirm(`Delete ${selected.size} item(s)?`)) return;
   selected.forEach((id, name) => {
-    deleteSingle(id, name)
+    deleteSingle(id, name, false)
   });
   renderFiles();
 }
