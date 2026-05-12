@@ -465,7 +465,7 @@
     </button>
   </div>
 
-  <input type="file" id="upload-input" multiple onchange="handleUpload(this)"/>
+  <input type="file" id="upload-input" onchange="handleUpload(this)"/>
 
   <!-- Column headers -->
   <div class="col-header">
@@ -795,6 +795,7 @@ async function downloadFile(fileName) {
 
 // ── Upload ───────────────────────────────────────────────────────────────────
 function handleUpload(input) {
+  /*
   const files = Array.from(input.files);
   files.forEach(f => {
     const ext  = f.name.includes('.') ? f.name.split('.').pop().toLowerCase() : null;
@@ -811,7 +812,24 @@ function handleUpload(input) {
     }
   });
   input.value = '';
+  */
+  const fileContent = await file.arrayBuffer();
+
+  const formData = new FormData();
+  formData.append("action", "upload");
+  formData.append("files",   new Blob([fileContent], { "application/octet-stream" }), file.name);
+
+  const response = await fetch("/manager/private", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+  }
+
   renderFiles(true);
+  return response.json();
 }
 
 // ── Drag & drop upload ───────────────────────────────────────────────────────

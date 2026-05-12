@@ -168,14 +168,17 @@ def gettoken(**kwargs):
 def private(**kwargs):
 	log.debug("Private request: kwargs='%s'", str(kwargs))
 	action = kwargs.get("action")
-	if action == "rename":
+
+	if action == "list":
+		return list_files()
+
+	elif action == "rename":
 		old_name=kwargs.get("old_name", "")
 		new_name=kwargs.get("new_name", "")
 		if old_name == "" or new_name == "":
 			raise Exception("Invalid parameters")
 		return rename_file(old_name, new_name)
-	elif action == "list":
-		return list_files()
+
 	elif action == "download":
 		file_name=kwargs.get("file_name", "")
 		if file_name == "":
@@ -188,7 +191,11 @@ def private(**kwargs):
 			raise Exception("Invalid file_name")
 		return delete_file(file_name)
 
-
+	elif action == "upload":
+		files = kwargs.get("files", [])
+		if len(files) != 1:
+			raise Exception("Invalid parameters")
+		return upload_files(files)
 
 	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
 	with filepath.open("rb") as f:
@@ -253,6 +260,15 @@ def delete_file(file_name):
 		out = { "error": str(e), "details": f"Couldn't delete '{str(file_name)}'"}
 
 	body = json.dumps(out).encode("utf-8")
+	return ("200 OK",
+		[
+			("Content-Type", "application/json; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)
+
+def upload_files(files):
+	log.debug("Files to upload files='%s'", files)
+	body = json.dumps({ "error": "", "details": "Files Uploaded"}).encode("utf-8")
 	return ("200 OK",
 		[
 			("Content-Type", "application/json; charset=utf-8"),
