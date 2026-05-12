@@ -465,7 +465,7 @@
     </button>
   </div>
 
-  <input type="file" id="upload-input" onchange="handleUpload(this)"/>
+  <input type="file" id="upload-input" multiple onchange="handleUpload(this)"/>
 
   <!-- Column headers -->
   <div class="col-header">
@@ -795,9 +795,30 @@ async function downloadFile(fileName) {
 
 // ── Upload ───────────────────────────────────────────────────────────────────
 async function handleUpload(input) {
-  /*
+  //file = input.files[0];
+  const formData = new FormData();
+  formData.append("action", "upload");
+
   const files = Array.from(input.files);
+
   files.forEach(f => {
+    formData.append("files", file, file.name);
+    /*
+    const fileContent = await file.arrayBuffer();
+
+    formData.append("files",   new Blob([fileContent], { type: "application/octet-stream" }), file.name);
+  */
+  });
+  const response = await fetch("/manager/private", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+  }
+  input.value = '';    
+  /*
     const ext  = f.name.includes('.') ? f.name.split('.').pop().toLowerCase() : null;
     const existing = (FS[currentPath] || []).find(e => e.name === f.name);
     if (!existing) {
@@ -813,21 +834,6 @@ async function handleUpload(input) {
   });
   input.value = '';
   */
-  file = input.files[0];
-  const fileContent = await file.arrayBuffer();
-
-  const formData = new FormData();
-  formData.append("action", "upload");
-  formData.append("files",   new Blob([fileContent], { type: "application/octet-stream" }), file.name);
-
-  const response = await fetch("/manager/private", {
-    method: "POST",
-    body:   formData,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
-  }
 
   renderFiles(true);
   return response.json();
