@@ -268,7 +268,9 @@ def delete_file(file_name):
 		], body)
 
 def upload_files(files):
-	for v in files.get('files', []):
+	filelist = files.get('files', [])
+	log.debug("filelist='%s'", filelist.__class__)
+	for v in filelist:
 		log.debug("Files to upload v='%s' content_disposition='%s'", v, v.disposition)
 		msg = Message()
 		msg['Content-Disposition'] = v.disposition
