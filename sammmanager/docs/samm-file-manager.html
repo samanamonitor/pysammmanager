@@ -678,9 +678,9 @@ function toggleSelect(id) {
 function toggleAll(cb) {
   const items = FS[currentPath] || [];
   if (cb.checked) {
-    items.forEach(f => selected.add(currentPath + '/' + f.name));
+    items.forEach(f => {selected.add(f.name)});
   } else {
-    items.forEach(f => selected.delete(currentPath + '/' + f.name));
+    items.forEach(f => selected.delete(f.name));
   }
   renderFiles();
 }
