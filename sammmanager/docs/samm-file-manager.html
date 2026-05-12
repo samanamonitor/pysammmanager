@@ -739,10 +739,6 @@ function sortBy(col) {
 // ── Delete ───────────────────────────────────────────────────────────────────
 async function deleteSingle(id, name) {
   if (!confirm(`Delete "${name}"?`)) return;
-  /*
-  FS[currentPath] = (FS[currentPath] || []).filter(f => currentPath + '/' + f.name !== id);
-  selected.delete(id);
-  */
   const formData = new FormData();
   formData.append("action",   "delete");
   formData.append("file_name", name);
@@ -762,11 +758,9 @@ async function deleteSingle(id, name) {
 
 function deleteSelected() {
   if (!confirm(`Delete ${selected.size} item(s)?`)) return;
-  selected.forEach(id => {
-    const name = id.split('/').pop();
-    FS[currentPath] = (FS[currentPath] || []).filter(f => f.name !== name);
+  selected.forEach((id, name) => {
+    deleteSingle(id, name)
   });
-  selected.clear();
   renderFiles();
 }
 
