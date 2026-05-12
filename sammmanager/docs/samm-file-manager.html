@@ -589,8 +589,8 @@ function renderBreadcrumb() {
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────
-async function renderFiles() {
-  FS[currentPath] = await listFiles()
+async function renderFiles(update=false) {
+  if (update) FS[currentPath] = await listFiles();
   const query  = document.getElementById('search-input').value.toLowerCase();
   let   items  = (FS[currentPath] || []).filter(f => f.name.toLowerCase().includes(query));
 
@@ -676,7 +676,7 @@ function navigate(path) {
   currentPath = path;
   selected.clear();
   document.getElementById('search-input').value = '';
-  renderFiles();
+  renderFiles(false);
 }
 
 function rowClick(e, id, type, name) {
@@ -696,7 +696,7 @@ function rowClick(e, id, type, name) {
 function toggleSelect(id) {
   if (selected.has(id)) selected.delete(id);
   else selected.add(id);
-  renderFiles();
+  renderFiles(false);
 }
 
 function toggleAll(cb) {
@@ -706,7 +706,7 @@ function toggleAll(cb) {
   } else {
     items.forEach(f => selected.delete(currentPath + '/' + f.name));
   }
-  renderFiles();
+  renderFiles(false);
 }
 
 function updateSelectionUI() {
@@ -733,11 +733,11 @@ function sortBy(col) {
   document.querySelectorAll('.col-th').forEach(th => th.classList.remove('sorted'));
   const active = document.querySelector(`.col-th[data-col="${col}"]`);
   if (active) active.classList.add('sorted');
-  renderFiles();
+  renderFiles(false);
 }
 
 // ── Delete ───────────────────────────────────────────────────────────────────
-async function deleteSingle(id, name, render) {
+async function deleteSingle(id, name, update=true) {
   if (!confirm(`Delete "${name}"?`)) return;
   const formData = new FormData();
   formData.append("action",   "delete");
@@ -752,7 +752,7 @@ async function deleteSingle(id, name, render) {
     throw new Error(`Delete failed: ${response.status} ${response.statusText}`);
   }
 
-  if (render) renderFiles();
+  renderFiles(update);
   return response.json();
 }
 
@@ -761,7 +761,7 @@ function deleteSelected() {
   selected.forEach((id, name) => {
     deleteSingle(id, name, false)
   });
-  renderFiles();
+  renderFiles(true);
 }
 
 // ── Download ─────────────────────────────────────────────────────────────────
@@ -811,7 +811,7 @@ function handleUpload(input) {
     }
   });
   input.value = '';
-  renderFiles();
+  renderFiles(true);
 }
 
 // ── Drag & drop upload ───────────────────────────────────────────────────────
@@ -833,7 +833,7 @@ panel.addEventListener('drop', e => {
         modified: new Date().toISOString().slice(0,16).replace('T',' '), ext });
     }
   });
-  renderFiles();
+  renderFiles(true);
 });
 
 // ── New folder modal ─────────────────────────────────────────────────────────
@@ -890,7 +890,7 @@ function confirmRename() {
   selected.delete(renameTarget.id);
   renameTarget = null;
   closeModal('modal-rename');
-  renderFiles();
+  renderFiles(true);
 }
 
 async function renameFile(oldName, newName) {
