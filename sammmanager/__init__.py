@@ -183,6 +183,13 @@ def private(**kwargs):
 			raise Exception("Invalid file_name")
 
 		return download_file(file_name)
+	elif action == "delete":
+		file_name=kwargs.get("file_name", "")
+		if file_name == "":
+			raise Exception("Invalid file_name")
+
+		return delete_file(file_name)
+
 
 
 	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
