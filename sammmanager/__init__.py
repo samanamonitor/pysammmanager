@@ -193,17 +193,8 @@ def private(**kwargs):
 
 	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
 	with filepath.open("r") as f:
-		temp = Template(f.read())
+		body = f.read()
 
-	items=[]
-	privatepath=Path("/private")
-	for f in privatepath.iterdir():
-		if f.is_file():
-			modified = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
-			line=f"{{ name: '{f.name}', type: 'file', size: {f.stat().st_size}, modified: '{modified}'}},"
-			items.append(line)
-
-	body = temp.render(name="Hello", items=items).encode("utf8")
 	return ("200 OK",
 		[
 			("Content-Type", "text/html; charset=utf-8"),

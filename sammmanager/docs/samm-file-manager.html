@@ -418,7 +418,7 @@
       <svg width="18" height="18" fill="none" stroke="#f18b34" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
     </div>
     <div>
-      <div class="panel-title">SAMM File Manager {{name}}</div>
+      <div class="panel-title">SAMM File Manager</div>
       <div class="panel-sub" id="current-path-display">samm.datasource / filesystem</div>
     </div>
     <div class="panel-header-actions">
@@ -676,7 +676,7 @@ function navigate(path) {
   currentPath = path;
   selected.clear();
   document.getElementById('search-input').value = '';
-  renderFiles(false);
+  renderFiles();
 }
 
 function rowClick(e, id, type, name) {
@@ -696,7 +696,7 @@ function rowClick(e, id, type, name) {
 function toggleSelect(id) {
   if (selected.has(id)) selected.delete(id);
   else selected.add(id);
-  renderFiles(false);
+  renderFiles();
 }
 
 function toggleAll(cb) {
@@ -706,7 +706,7 @@ function toggleAll(cb) {
   } else {
     items.forEach(f => selected.delete(currentPath + '/' + f.name));
   }
-  renderFiles(false);
+  renderFiles();
 }
 
 function updateSelectionUI() {
@@ -733,7 +733,7 @@ function sortBy(col) {
   document.querySelectorAll('.col-th').forEach(th => th.classList.remove('sorted'));
   const active = document.querySelector(`.col-th[data-col="${col}"]`);
   if (active) active.classList.add('sorted');
-  renderFiles(false);
+  renderFiles();
 }
 
 // ── Delete ───────────────────────────────────────────────────────────────────
