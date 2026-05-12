@@ -246,3 +246,18 @@ def download_file(file_name):
 			("Content-Type", "application/octet-stream"),
 			("Content-Length", str(len(body))),
 		], body)
+
+def delete_file(file_name):
+	filepath = Path("/private") / file_name
+	try:
+		filepath.unlink()
+		out = { "error": "", "details": "File renamed"}
+	except Exception as e:
+		out = { "error": str(e), "details": f"Couldn't delete '{file_name}'"}
+
+	body = json.dumps(out).encode("utf-8")
+	return ("200 OK",
+		[
+			("Content-Type", "application/json; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)
