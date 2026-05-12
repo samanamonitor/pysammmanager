@@ -794,7 +794,7 @@ async function downloadFile(fileName) {
 }
 
 // ── Upload ───────────────────────────────────────────────────────────────────
-async function handleUpload(file) {
+async function handleUpload(input) {
   /*
   const files = Array.from(input.files);
   files.forEach(f => {
@@ -813,6 +813,7 @@ async function handleUpload(file) {
   });
   input.value = '';
   */
+  file = input.files[0];
   const fileContent = await file.arrayBuffer();
 
   const formData = new FormData();
