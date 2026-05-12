@@ -635,7 +635,7 @@ async function listFiles() {
   const formData = new FormData();
   formData.append("action",   "list");
 
-  const response = await fetch("/manager/private", {
+  const response = await fetch("", {
     method: "POST",
     body:   formData,
   });
