@@ -487,22 +487,6 @@
   </div>
 </div>
 
-<!-- New folder modal -->
-<div class="modal-backdrop" id="modal-new-folder">
-  <div class="modal">
-    <div class="modal-header">New folder</div>
-    <div class="modal-body">
-      <label>Folder name</label>
-      <input type="text" id="new-folder-name" placeholder="my-folder" autocomplete="off" spellcheck="false"
-             onkeydown="if(event.key==='Enter') confirmNewFolder()"/>
-    </div>
-    <div class="modal-footer">
-      <button class="tbtn" onclick="closeModal('modal-new-folder')">Cancel</button>
-      <button class="tbtn primary" onclick="confirmNewFolder()">Create</button>
-    </div>
-  </div>
-</div>
-
 <!-- Rename modal -->
 <div class="modal-backdrop" id="modal-rename">
   <div class="modal">
@@ -598,7 +582,7 @@ async function renderFiles(update=false) {
         : '';
       return `
       <div class="file-row${sel?' selected':''}" data-id="${id}" data-type="${item.type}"
-           onclick="rowClick(event,'${id}','${item.type}','${item.name}')">
+           onclick="rowClick(event,'${id}')">
         <input type="checkbox" class="file-check" ${sel?'checked':''} onclick="event.stopPropagation();toggleSelect('${id}')"/>
         <div class="file-name">
           <span class="file-icon">${fileIcon(item)}</span>
@@ -647,27 +631,11 @@ async function listFiles() {
   return response.json();
 }
 
-// ── Navigation ───────────────────────────────────────────────────────────────
-function navigate(path) {
-  currentPath = path;
-  selected.clear();
-  document.getElementById('search-input').value = '';
-  renderFiles();
-}
-
-function rowClick(e, id, type, name) {
+function rowClick(e, id) {
   if (type === 'folder') {
-    const folderPath = currentPath === '/' ? '/' + name : currentPath + '/' + name;
-    // Only navigate if the folder has entries defined
-    if (FS[folderPath] !== undefined) {
-      navigate(folderPath);
-    } else {
-      navigate(folderPath);
-      FS[folderPath] = [];
-    }
-  } else {
-    toggleSelect(id);
+    return;
   }
+  toggleSelect(id);
 }
 
 // ── Selection ────────────────────────────────────────────────────────────────
@@ -773,7 +741,6 @@ async function downloadFile(fileName) {
 
 // ── Upload ───────────────────────────────────────────────────────────────────
 async function handleUpload(input) {
-  //file = input.files[0];
   const formData = new FormData();
   formData.append("action", "upload");
 
@@ -782,7 +749,7 @@ async function handleUpload(input) {
   for (const f of input.files) {
     const fileContent = await f.arrayBuffer();
 
-    formData.append(f.name,   new Blob([fileContent], { f: "application/octet-stream" }), f.name);
+    formData.append(f.name,   new Blob([fileContent], { type: "application/octet-stream" }), f.name);
   }
   const response = await fetch("", {
     method: "POST",
@@ -820,28 +787,6 @@ panel.addEventListener('drop', e => {
   renderFiles(true);
 });
 
-// ── New folder modal ─────────────────────────────────────────────────────────
-function openNewFolderModal() {
-  document.getElementById('new-folder-name').value = '';
-  document.getElementById('modal-new-folder').classList.add('open');
-  setTimeout(() => document.getElementById('new-folder-name').focus(), 50);
-}
-
-function confirmNewFolder() {
-  const name = document.getElementById('new-folder-name').value.trim();
-  if (!name) return;
-  if ((FS[currentPath] || []).find(f => f.name === name)) {
-    alert('A file or folder with that name already exists.');
-    return;
-  }
-  FS[currentPath] = FS[currentPath] || [];
-  FS[currentPath].unshift({ name, type: 'folder', size: null,
-    modified: new Date().toISOString().slice(0,16).replace('T',' ') });
-  const folderPath = currentPath === '/' ? '/' + name : currentPath + '/' + name;
-  FS[folderPath] = [];
-  closeModal('modal-new-folder');
-  renderFiles(true);
-}
 
 // ── Rename modal ─────────────────────────────────────────────────────────────
 function openRenameModal(id, name) {
@@ -856,6 +801,7 @@ function openRenameModal(id, name) {
   }, 50);
 }
 
+// ── Rename File ─────────────────────────────────────────────────────────────────────
 function confirmRename() {
   const newName = document.getElementById('rename-value').value.trim();
   if (!newName || !renameTarget) return;
