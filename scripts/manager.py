@@ -31,8 +31,7 @@ def application(env, start_response):
 
 	log.info("Requests received. data=%s", env)
 	try:
-		headers=[]
-		if sammcookie is None:
+		if sammcookie is None and path_info.relative_to(basepath).name != "gettoken":
 			token = query_string.pop("token", "")
 			if token == "":
 				raise NotAuthorized
@@ -61,6 +60,7 @@ def application(env, start_response):
 		status, headers, body = func(**query_string)
 	except NotAuthorized:
 		log.error("Unauthorized")
+		status, headers, body = sammmanager.not_authorized()
 		cookie = cookies.SimpleCookie()
 		cookie['samm_auth'] = 'asdf'
 		cookie['samm_auth']['expires'] = 'Thu, 01 Jan 1970 00:00:00 GMT'
@@ -68,7 +68,6 @@ def application(env, start_response):
 		headers.append(
 				("Set-Cookie", cookie['samm_auth'].OutputString()),
 			)
-		status, headers, body = sammmanager.not_authorized()
 	except (AttributeError, ValueError) as e:
 		log.exception(e.__class__.__name__)
 		status, headers, body = sammmanager.notfound(e)
