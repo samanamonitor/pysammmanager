@@ -54,8 +54,6 @@ def verify_token(token) -> dict | None:
     """
     Verify signature and expiry. Returns the payload dict or None if invalid.
     """
-    if isinstance(token, list) and len(token) > 0:
-        token = token[0]
 
     try:
         payload_b64, sig_b64 = token.split(".", 1)
