@@ -25,13 +25,10 @@ def application(env, start_response):
 	log.info("Requests received. data=%s", env)
 	try:
 		func_name = path_info.relative_to(basepath).parent
-		log.debug("request='%s' func_name='%s'", path_info.relative_to(basepath), func_name)
 		if str(func_name) == ".":
-			log.debug("######### func_name is .")
 			func_name = path_info.relative_to(basepath).name
 		else:
 			query_string["localfile"] = str(path_info.relative_to(basepath).name)
-		log.debug("request='%s' func_name='%s'", path_info.relative_to(basepath), func_name)
 
 		func = getattr(sammmanager, str(func_name))
 		status, headers, body = func(**query_string)
