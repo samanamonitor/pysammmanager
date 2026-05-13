@@ -41,9 +41,10 @@ def application(env, start_response):
 		cookie_expires = expire_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
 		cookie['samm_auth']['expires'] = cookie_expires
 		cookie['samm_auth']['path'] = str(basepath)
+		strcookie = cookie.output()
 		start_response("302 Found", [
-			cookie.output(),
-			"Location", path_info
+			(cookie.output()),
+			("Location", path_info)
 		])
 		return b""
 
