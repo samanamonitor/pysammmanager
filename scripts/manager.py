@@ -31,7 +31,7 @@ def application(env, start_response):
 
 	log.info("Requests received. data=%s", env)
 	try:
-
+		headers=[]
 		if sammcookie is None:
 			token = query_string.pop("token", "")
 			if token == "":
