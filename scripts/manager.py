@@ -2,6 +2,7 @@ from urllib.parse import parse_qs
 import sammmanager
 import logging
 import os
+from pathlib import Path
 from multipart import parse_form_data
 
 log = logging.getLogger(__name__)
@@ -12,7 +13,8 @@ class NotAuthorized(Exception):
 	pass
 
 def application(env, start_response):
-	path_info = env.get('PATH_INFO')
+	basepath = Path(os.environ.get('BASE_PATH', "/manager"))
+	path_info = Path(env.get('PATH_INFO'))
 	query_string = {}
 	if env.get('REQUEST_METHOD', "") == "POST":
 		query_string, files = parse_form_data(env)
@@ -22,13 +24,18 @@ def application(env, start_response):
 
 	log.info("Requests received. data=%s", env)
 	try:
-		_, _, func_name = path_info.rpartition('/')
-		func = getattr(sammmanager, func_name)
+		func_name = path_info.relative_to(basepath).parent
+		if func_name == ".":
+			func_name = path_info.relative_to(basepath).name
+		else:
+			query_string["localfile"] = str(path_info.relative_to(basepath).name)
+
+		func = getattr(sammmanager, str(func_name))
 		status, headers, body = func(**query_string)
 	except NotAuthorized:
 		log.error("Unauthorized")
 		status, headers, body = sammmanager.not_authorized()
-	except AttributeError as e:
+	except (AttributeError, ValueError) as e:
 		log.exception(e.__class__.__name__)
 		status, headers, body = sammmanager.notfound(e)
 	except KeyError as e:
