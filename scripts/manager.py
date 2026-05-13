@@ -36,16 +36,18 @@ def application(env, start_response):
 			token = query_string.pop("token", "")
 			if token == "":
 				raise NotAuthorized
-			cookie['samm_auth'] = token
-		expire_date = datetime.now(timezone.utc) + timedelta(minutes=5)
-		cookie_expires = expire_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
-		cookie['samm_auth']['expires'] = cookie_expires
-		cookie['samm_auth']['path'] = str(basepath)
-		start_response("302 Found", [
-			("Set-Cookie", cookie['samm_auth'].OutputString()),
-			("Location", str(path_info))
-		])
-		return b""
+			if not isinstance(token, list):
+				token = [token]
+			cookie['samm_auth'] = token[0]		
+			expire_date = datetime.now(timezone.utc) + timedelta(minutes=5)
+			cookie_expires = expire_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
+			cookie['samm_auth']['expires'] = cookie_expires
+			cookie['samm_auth']['path'] = str(basepath)
+			start_response("302 Found", [
+				("Set-Cookie", cookie['samm_auth'].OutputString()),
+				("Location", str(path_info))
+			])
+			return b""
 
 		func_name = path_info.relative_to(basepath).parent
 		if str(func_name) == ".":
