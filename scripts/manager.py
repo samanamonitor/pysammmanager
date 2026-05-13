@@ -49,7 +49,7 @@ def application(env, start_response):
 			])
 			return b""
 		else:
-			query_string['token'] = sammcookie.value
+			query_string['token'] = sammcookie
 
 		func_name = path_info.relative_to(basepath).parent
 		if str(func_name) == ".":
