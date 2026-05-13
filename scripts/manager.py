@@ -6,7 +6,7 @@ from pathlib import Path
 from multipart import parse_form_data
 from http import cookies
 from datetime import datetime, timedelta, timezone
-from .tokens import gettoken
+from sammmanager.tokens import gettoken
 
 log = logging.getLogger(__name__)
 
