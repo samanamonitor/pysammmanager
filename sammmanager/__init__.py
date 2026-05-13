@@ -137,7 +137,12 @@ def updatecreds(**kwargs):
 		log.error("Invalid token. token=%s" % token)
 		return not_authorized()
 
-	if auth.get("dashboard", "") != "SAMM Windows Credentials Update":
+	allowed_dashboards=[
+		"SAMM Windows Credentials Update",
+		"SAMM Administration"
+	]
+	dashboard = auth.get("dashboard", "")
+	if dashboard not in allowed_dashboards:
 		log.error("Invalid dashboard. auth=%s" % auth)
 		return not_authorized()
 
