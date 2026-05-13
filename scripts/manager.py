@@ -43,7 +43,7 @@ def process_session(env, basepath, token):
 		return "302 Found", [
 			("Set-Cookie", cookie['samm_auth'].OutputString()),
 			("Location", str(path_info))
-		]
+			], b""
 	else:
 		token = sammcookie
 
