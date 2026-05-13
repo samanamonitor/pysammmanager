@@ -40,7 +40,7 @@ def application(env, start_response):
 		if path_info.relative_to(basepath).name == "expire":
 			raise NotAuthorized
 
-		if sammcookie is None:
+		if sammcookie is None or "token" in query_string:
 			token = query_string.pop("token", "")
 			if token == "":
 				raise NotAuthorized
@@ -78,7 +78,8 @@ def application(env, start_response):
 				("Set-Cookie", cookie['samm_auth'].OutputString()),
 			)
 	except (AttributeError, ValueError) as e:
-		log.exception(e.__class__.__name__)
+		#log.exception(e.__class__.__name__)
+		log.error(e)
 		status, headers, body = sammmanager.notfound(e)
 	except KeyError as e:
 		log.exception(e.__class__.__name__)
