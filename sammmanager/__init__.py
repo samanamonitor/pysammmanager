@@ -68,6 +68,26 @@ def rdp(ip_address=None):
 			],
 			rdp_data.encode('ascii'))
 
+def style(localfile=None):
+	filepath = Path(__file__).parent / Path("docs/style") / Path(localfile)
+	with filepath.open("rb") as f:
+		body = f.read()
+
+	if filepath.suffix == ".css":
+		ct = ("Content-Type", "text/css; charset=utf-8")
+	elif filepath.suffix == ".js":
+		ct = ("Content-Type", "text/javascript; charset=utf-8")
+	elif filepath.suffix == ".html":
+		ct = ("Content-Type", "text/html; charset=utf-8")
+	else:
+		raise ValueError(localfile)
+
+	return ("200 OK",
+		[
+			ct,
+			("Content-Length", str(len(body))),
+		], body)
+
 def vmdetail(hostedmachinename=None):
 	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 	if hostedmachinename is None:
