@@ -33,7 +33,7 @@ def application(env, start_response):
 	log.info("Requests received. data=%s", env)
 	try:
 		if str(path_info) == "/gettoken":
-			status, headers, body = gettoken(**kwargs)
+			status, headers, body = gettoken(**query_string)
 			start_response(status, headers)
 			return body
 
