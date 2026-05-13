@@ -72,7 +72,7 @@ def application(env, start_response):
 			start_response(status, headers)
 			return body
 
-		status, headers, body = process_session(env, query_string.pop("token"))
+		status, headers, body = process_session(env, query_string.pop("token", None))
 		if status is not None:
 			start_response(status, headers)
 			return body
