@@ -48,6 +48,8 @@ def application(env, start_response):
 				("Location", str(path_info))
 			])
 			return b""
+		else:
+			query_string['token'] = sammcookie.value
 
 		func_name = path_info.relative_to(basepath).parent
 		if str(func_name) == ".":
