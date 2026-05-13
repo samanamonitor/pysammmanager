@@ -124,28 +124,10 @@ def hostdetail(hostingservername=None):
 
 def updatecreds(**kwargs):
 	log.info("Received body data=%s", kwargs)
-	token = kwargs.get("token")
-	if token is None:
-		log.error("No token found in request")
-		return not_authorized()
 
-	if isinstance(token, list) and len(token) > 0:
-		token = token[0]
-
-	auth = tokens.verify_token(token)
-	if not isinstance(auth, dict):
+	if tokens.verify_token(kwargs.get("token", "")) is None:
 		log.error("Invalid token. token=%s" % token)
 		return not_authorized()
-
-	allowed_dashboards=[
-		"SAMM Windows Credentials Update",
-		"SAMM Administration"
-	]
-	dashboard = auth.get("dashboard", "")
-	if dashboard not in allowed_dashboards:
-		log.error("Invalid dashboard. auth=%s" % auth)
-		return not_authorized()
-
 
 	auth_method = kwargs.get("auth_method")
 	if auth_method == "userpass":
@@ -193,6 +175,11 @@ def gettoken(**kwargs):
 
 def private(**kwargs):
 	log.debug("Private request: kwargs='%s'", str(kwargs))
+
+	if tokens.verify_token(kwargs.get("token", "")) is None:
+		log.error("Invalid token. token=%s" % token)
+		return not_authorized()
+
 	action = kwargs.get("action")
 
 	if action == "list":

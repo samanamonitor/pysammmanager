@@ -35,10 +35,13 @@ def generate_token(user: str, dashboard: str, ttl_seconds: int = 300) -> str:
     return f"{payload_b64}.{sig_b64}"
 
 
-def verify_token(token: str) -> dict | None:
+def verify_token(token) -> dict | None:
     """
     Verify signature and expiry. Returns the payload dict or None if invalid.
     """
+    if isinstance(token, list) and len(token) > 0:
+        token = token[0]
+
     try:
         payload_b64, sig_b64 = token.split(".", 1)
     except ValueError:
@@ -62,6 +65,15 @@ def verify_token(token: str) -> dict | None:
 
     if time.time() > payload["exp"]:
         log.error("Expired token")
-        return None  # Token expired
+        return None
+
+    allowed_dashboards=[
+        "SAMM Windows Credentials Update",
+        "SAMM Administration"
+    ]
+    dashboard = auth.get("dashboard", "")
+    if dashboard not in allowed_dashboards:
+        log.error("Invalid dashboard. auth=%s" % auth)
+        return None
 
     return payload
