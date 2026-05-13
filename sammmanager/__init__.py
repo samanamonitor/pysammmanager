@@ -68,7 +68,7 @@ def rdp(ip_address=None):
 			],
 			rdp_data.encode('ascii'))
 
-def static(localfile=None, token=None):
+def static(localfile=None):
 	filepath = Path(__file__).parent / Path("docs/static") / Path(localfile)
 	with filepath.open("rb") as f:
 		body = f.read()
@@ -88,7 +88,7 @@ def static(localfile=None, token=None):
 			("Content-Length", str(len(body))),
 		], body)
 
-def vmdetail(hostedmachinename=None, token=None):
+def vmdetail(hostedmachinename=None):
 	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 	if hostedmachinename is None:
 		raise KeyError("Virtual Machine not found")
@@ -105,7 +105,7 @@ def vmdetail(hostedmachinename=None, token=None):
 		]
 		)
 
-def hostdetail(hostingservername=None, token=None):
+def hostdetail(hostingservername=None):
 	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 	if hostingservername is None:
 		raise KeyError("Host not found")
@@ -161,8 +161,6 @@ def updatecreds(**kwargs):
 def private(**kwargs):
 	log.debug("Private request: kwargs='%s'", str(kwargs))
 
-	if tokens.verify_token(kwargs.get("token", "")) is None:
-		return not_authorized()
 
 	action = kwargs.get("action")
 
@@ -204,7 +202,7 @@ def private(**kwargs):
 			("Content-Length", str(len(body))),
 		], body)
 
-def rename_file(old_name, new_name, token=None):
+def rename_file(old_name, new_name):
 	log.debug("Renaming file %s to %s", old_name, new_name)
 	old_path = Path("/private") / old_name
 	new_path = Path("/private") / new_name
@@ -220,7 +218,7 @@ def rename_file(old_name, new_name, token=None):
 			("Content-Length", str(len(body))),
 		], body)
 
-def list_files(token=None):
+def list_files():
 	items=[]
 	privatepath=Path("/private")
 	for f in privatepath.iterdir():
@@ -236,7 +234,7 @@ def list_files(token=None):
 			("Content-Length", str(len(body))),
 		], body)
 
-def download_file(file_name, token=None):
+def download_file(file_name):
 	filepath = Path("/private") / file_name
 	with filepath.open("rb") as f:
 		body = f.read()
@@ -247,7 +245,7 @@ def download_file(file_name, token=None):
 			("Content-Length", str(len(body))),
 		], body)
 
-def delete_file(file_name, token=None):
+def delete_file(file_name):
 	filepath = Path("/private") / file_name
 	try:
 		filepath.unlink()
@@ -263,7 +261,7 @@ def delete_file(file_name, token=None):
 			("Content-Length", str(len(body))),
 		], body)
 
-def upload_files(files, token=None):
+def upload_files(files):
 	for k, v in files.items():
 		log.debug("Files to upload k='%s' v='%s' content_disposition='%s'", k, v, v.disposition)
 		msg = Message()

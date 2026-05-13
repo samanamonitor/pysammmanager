@@ -11,7 +11,7 @@ SECRET_KEY = os.environ.get("SAMM_SECRET", "change-me-to-something-strong")
 
 log = logging.getLogger(__name__)
 
-def gettoken(**kwargs):
+def get_token(**kwargs):
     user = kwargs.get("user", "")
     if isinstance(user, list):
         user = "".join(user)

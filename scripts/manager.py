@@ -6,7 +6,7 @@ from pathlib import Path
 from multipart import parse_form_data
 from http import cookies
 from datetime import datetime, timedelta, timezone
-from sammmanager.tokens import gettoken
+from sammmanager.tokens import get_token, verify_token
 
 log = logging.getLogger(__name__)
 
@@ -15,11 +15,44 @@ log.setLevel(os.environ.get("LOGLEVEL", "WARN"))
 class NotAuthorized(Exception):
 	pass
 
-def application(env, start_response):
+def process_session(env, token):
+	path_info = Path(env.get('PATH_INFO'))
 	auth_cookie = env.get("HTTP_COOKIE", "")
 	cookie = cookies.SimpleCookie()
 	cookie.load(auth_cookie)
 	sammcookie=cookie.get("samm_auth", cookies.Morsel()).value
+
+	if path_info.relative_to(basepath).name == "expire":
+		log.info("Forcefully expiring token.")
+		raise NotAuthorized
+
+	if sammcookie is None:
+
+		if isinstance(token, list):
+			token = token[0]
+
+		if token is None or token == "":
+			raise NotAuthorized
+
+		cookie['samm_auth'] = token[0]
+		expire_date = datetime.now(timezone.utc) + timedelta(minutes=5)
+		cookie_expires = expire_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
+		cookie['samm_auth']['expires'] = cookie_expires
+		cookie['samm_auth']['path'] = str(basepath)
+		log.info("Token moved to cookie.")
+		return "302 Found", [
+			("Set-Cookie", cookie['samm_auth'].OutputString()),
+			("Location", str(path_info))
+		]
+	else:
+		token = sammcookie
+
+	if verify_token(token) is None:
+		raise NotAuthorized
+
+	return None, None, None
+
+def application(env, start_response):
 
 	basepath = Path(os.environ.get('BASE_PATH', "/manager"))
 	path_info = Path(env.get('PATH_INFO'))
@@ -30,34 +63,19 @@ def application(env, start_response):
 	else:
 		query_string = parse_qs(env.get('QUERY_STRING'))
 
-	log.info("Requests received. data=%s", env)
+	log.debug("Requests received. data=%s", env)
 	try:
-		if str(path_info) == "/gettoken":
-			status, headers, body = gettoken(**query_string)
+
+		if str(path_info) == "/samminternal/gettoken":
+			log.info("Requesting token.")
+			status, headers, body = get_token(**query_string)
 			start_response(status, headers)
 			return body
 
-		if path_info.relative_to(basepath).name == "expire":
-			raise NotAuthorized
-
-		if sammcookie is None or "token" in query_string:
-			token = query_string.pop("token", "")
-			if token == "":
-				raise NotAuthorized
-			if not isinstance(token, list):
-				token = [token]
-			cookie['samm_auth'] = token[0]		
-			expire_date = datetime.now(timezone.utc) + timedelta(minutes=5)
-			cookie_expires = expire_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
-			cookie['samm_auth']['expires'] = cookie_expires
-			cookie['samm_auth']['path'] = str(basepath)
-			start_response("302 Found", [
-				("Set-Cookie", cookie['samm_auth'].OutputString()),
-				("Location", str(path_info))
-			])
-			return b""
-		else:
-			query_string['token'] = sammcookie
+		status, headers, body = process_session(env, query_string.pop("token"))
+		if status is not None:
+			start_response(status, headers)
+			return body
 
 		func_name = path_info.relative_to(basepath).parent
 		if str(func_name) == ".":
@@ -67,6 +85,7 @@ def application(env, start_response):
 
 		func = getattr(sammmanager, str(func_name))
 		status, headers, body = func(**query_string)
+
 	except NotAuthorized:
 		log.error("Unauthorized")
 		status, headers, body = sammmanager.not_authorized()
