@@ -28,7 +28,7 @@ def process_session(env, basepath, token):
 
 	if sammcookie is None:
 
-		if isinstance(token, list):
+		if not isinstance(token, str) and isinstance(token, list):
 			token = token[0]
 
 		if token is None or token == "":
