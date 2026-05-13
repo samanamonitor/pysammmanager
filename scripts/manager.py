@@ -15,7 +15,7 @@ log.setLevel(os.environ.get("LOGLEVEL", "WARN"))
 class NotAuthorized(Exception):
 	pass
 
-def process_session(env, token):
+def process_session(env, basepath, token):
 	path_info = Path(env.get('PATH_INFO'))
 	auth_cookie = env.get("HTTP_COOKIE", "")
 	cookie = cookies.SimpleCookie()
@@ -72,7 +72,7 @@ def application(env, start_response):
 			start_response(status, headers)
 			return body
 
-		status, headers, body = process_session(env, query_string.pop("token", None))
+		status, headers, body = process_session(env, basepath, query_string.pop("token", None))
 		if status is not None:
 			start_response(status, headers)
 			return body
