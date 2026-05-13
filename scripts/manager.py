@@ -26,7 +26,7 @@ def application(env, start_response):
 	try:
 		func_name = path_info.relative_to(basepath).parent
 		log.debug("request='%s' func_name='%s'", path_info.relative_to(basepath), func_name)
-		if func_name == ".":
+		if str(func_name) == ".":
 			log.debug("######### func_name is .")
 			func_name = path_info.relative_to(basepath).name
 		else:
