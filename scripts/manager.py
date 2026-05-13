@@ -61,7 +61,7 @@ def application(env, start_response):
 		status, headers, body = func(**query_string)
 	except NotAuthorized:
 		log.error("Unauthorized")
-		cookie = SimpleCookie()
+		cookie = cookies.SimpleCookie()
 		cookie['samm_auth'] = 'asdf'
 		cookie['samm_auth']['expires'] = 'Thu, 01 Jan 1970 00:00:00 GMT'
 		cookie['samm_auth']['path'] = str(basepath)
