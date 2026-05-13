@@ -25,6 +25,7 @@ def application(env, start_response):
 	log.info("Requests received. data=%s", env)
 	try:
 		func_name = path_info.relative_to(basepath).parent
+		log.debug("request=%s", path_info.relative_to(basepath))
 		if func_name == ".":
 			func_name = path_info.relative_to(basepath).name
 		else:
