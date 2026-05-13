@@ -4,6 +4,8 @@ import logging
 import os
 from pathlib import Path
 from multipart import parse_form_data
+from http import cookies
+from datetime import datetime, timedelta, timezone
 
 log = logging.getLogger(__name__)
 
@@ -13,6 +15,11 @@ class NotAuthorized(Exception):
 	pass
 
 def application(env, start_response):
+	auth_cookie = env.get("HTTP_COOKIE", "")
+	cookie = cookies.SimpleCookie()
+	cookie.load(auth_cookie)
+	sammcookie=cookie.get("samm_auth", cookies.Morsel()).value
+
 	basepath = Path(os.environ.get('BASE_PATH', "/manager"))
 	path_info = Path(env.get('PATH_INFO'))
 	query_string = {}
@@ -24,6 +31,22 @@ def application(env, start_response):
 
 	log.info("Requests received. data=%s", env)
 	try:
+
+		if sammcookie is None:
+			token = query_string.pop("token", "")
+			if token == "":
+				raise NotAuthorized
+			cookie['samm_auth'] = token
+		expire_date = datetime.now(timezone.utc) + timedelta(minutes=5)
+		cookie_expires = expire_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
+		cookie['samm_auth']['expires'] = cookie_expires
+		cookie['samm_auth']['path'] = str(basepath)
+		start_response("302 Found", [
+			cookie.output(),
+			"Location", path_info
+		])
+		return b""
+
 		func_name = path_info.relative_to(basepath).parent
 		if str(func_name) == ".":
 			func_name = path_info.relative_to(basepath).name
