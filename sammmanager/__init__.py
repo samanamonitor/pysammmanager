@@ -158,21 +158,6 @@ def updatecreds(**kwargs):
 			("Content-Length", str(len(body))),
 		], body)
 
-def gettoken(**kwargs):
-	user = kwargs.get("user", "")
-	if isinstance(user, list):
-		user = "".join(user)
-	dashboard = kwargs.get("dashboard", "")
-	if isinstance(dashboard, list):
-		dashboard = "".join(dashboard)
-	t = tokens.generate_token(user, dashboard)
-	body = json.dumps({"token": t})
-	return ("200 OK",
-		[
-			("Content-Type", "application/json; charset=utf-8"),
-			("Content-Length", str(len(body)))
-		], [body.encode('utf-8')])
-
 def private(**kwargs):
 	log.debug("Private request: kwargs='%s'", str(kwargs))
 

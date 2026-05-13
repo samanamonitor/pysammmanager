@@ -11,6 +11,21 @@ SECRET_KEY = os.environ.get("SAMM_SECRET", "change-me-to-something-strong")
 
 log = logging.getLogger(__name__)
 
+def gettoken(**kwargs):
+    user = kwargs.get("user", "")
+    if isinstance(user, list):
+        user = "".join(user)
+    dashboard = kwargs.get("dashboard", "")
+    if isinstance(dashboard, list):
+        dashboard = "".join(dashboard)
+    t = generate_token(user, dashboard)
+    body = json.dumps({"token": t})
+    return ("200 OK",
+        [
+            ("Content-Type", "application/json; charset=utf-8"),
+            ("Content-Length", str(len(body)))
+        ], [body.encode('utf-8')])
+
 def generate_token(user: str, dashboard: str, ttl_seconds: int = 300) -> str:
     """
     Create a short-lived signed token encoding the user identity.
