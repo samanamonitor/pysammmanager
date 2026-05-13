@@ -47,6 +47,7 @@ def process_session(env, basepath, token):
 	else:
 		token = sammcookie
 
+	log.debug("token='%s'", token)
 	if verify_token(token) is None:
 		raise NotAuthorized
 
