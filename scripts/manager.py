@@ -61,6 +61,13 @@ def application(env, start_response):
 		status, headers, body = func(**query_string)
 	except NotAuthorized:
 		log.error("Unauthorized")
+		cookie = SimpleCookie()
+		cookie['samm_auth'] = 'asdf'
+		cookie['samm_auth']['expires'] = 'Thu, 01 Jan 1970 00:00:00 GMT'
+		cookie['samm_auth']['path'] = str(basepath)
+		headers.append(
+				("Set-Cookie", cookie['samm_auth'].OutputString()),
+			)
 		status, headers, body = sammmanager.not_authorized()
 	except (AttributeError, ValueError) as e:
 		log.exception(e.__class__.__name__)
