@@ -68,8 +68,8 @@ def rdp(ip_address=None):
 			],
 			rdp_data.encode('ascii'))
 
-def style(localfile=None):
-	filepath = Path(__file__).parent / Path("docs/style") / Path(localfile)
+def static(localfile=None):
+	filepath = Path(__file__).parent / Path("docs/static") / Path(localfile)
 	with filepath.open("rb") as f:
 		body = f.read()
 
