@@ -68,7 +68,7 @@ def rdp(ip_address=None):
 			],
 			rdp_data.encode('ascii'))
 
-def static(localfile=None):
+def static(localfile=None, token=None):
 	filepath = Path(__file__).parent / Path("docs/static") / Path(localfile)
 	with filepath.open("rb") as f:
 		body = f.read()
@@ -88,7 +88,7 @@ def static(localfile=None):
 			("Content-Length", str(len(body))),
 		], body)
 
-def vmdetail(hostedmachinename=None):
+def vmdetail(hostedmachinename=None, token=None):
 	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 	if hostedmachinename is None:
 		raise KeyError("Virtual Machine not found")
@@ -105,7 +105,7 @@ def vmdetail(hostedmachinename=None):
 		]
 		)
 
-def hostdetail(hostingservername=None):
+def hostdetail(hostingservername=None, token=None):
 	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 	if hostingservername is None:
 		raise KeyError("Host not found")
@@ -219,7 +219,7 @@ def private(**kwargs):
 			("Content-Length", str(len(body))),
 		], body)
 
-def rename_file(old_name, new_name):
+def rename_file(old_name, new_name, token=None):
 	log.debug("Renaming file %s to %s", old_name, new_name)
 	old_path = Path("/private") / old_name
 	new_path = Path("/private") / new_name
@@ -235,7 +235,7 @@ def rename_file(old_name, new_name):
 			("Content-Length", str(len(body))),
 		], body)
 
-def list_files():
+def list_files(token=None):
 	items=[]
 	privatepath=Path("/private")
 	for f in privatepath.iterdir():
@@ -251,7 +251,7 @@ def list_files():
 			("Content-Length", str(len(body))),
 		], body)
 
-def download_file(file_name):
+def download_file(file_name, token=None):
 	filepath = Path("/private") / file_name
 	with filepath.open("rb") as f:
 		body = f.read()
@@ -262,7 +262,7 @@ def download_file(file_name):
 			("Content-Length", str(len(body))),
 		], body)
 
-def delete_file(file_name):
+def delete_file(file_name, token=None):
 	filepath = Path("/private") / file_name
 	try:
 		filepath.unlink()
@@ -278,7 +278,7 @@ def delete_file(file_name):
 			("Content-Length", str(len(body))),
 		], body)
 
-def upload_files(files):
+def upload_files(files, token=None):
 	for k, v in files.items():
 		log.debug("Files to upload k='%s' v='%s' content_disposition='%s'", k, v, v.disposition)
 		msg = Message()
