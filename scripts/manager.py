@@ -43,7 +43,7 @@ def application(env, start_response):
 		cookie['samm_auth']['path'] = str(basepath)
 		strcookie = cookie.output()
 		start_response("302 Found", [
-			(cookie.output()),
+			("Set-Cookie", cookie['samm_auth'].OutputString()),
 			("Location", path_info)
 		])
 		return b""
