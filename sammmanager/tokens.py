@@ -45,7 +45,7 @@ def verify_token(token) -> dict | None:
     try:
         payload_b64, sig_b64 = token.split(".", 1)
     except ValueError:
-        log.error("Invalid token syntax.")
+        log.error("Invalid token syntax. token='%s'", token)
         return None
 
     expected_sig = hmac.new(
@@ -57,23 +57,23 @@ def verify_token(token) -> dict | None:
 
     # Constant-time comparison to prevent timing attacks
     if not hmac.compare_digest(sig_b64, expected_b64):
-        log.error("Invalid token digest")
+        log.error("Invalid token digest. token='%s'", token)
         return None
 
     payload = json.loads(base64.urlsafe_b64decode(payload_b64).decode())
     log.debug("payload=%s" % payload)
 
-    if time.time() > payload["exp"]:
-        log.error("Expired token")
+    if time.time() > payload.get("exp", 0):
+        log.error("Expired token. token='%s' payload='%s'", token, payload)
         return None
 
     allowed_dashboards=[
         "SAMM Windows Credentials Update",
         "SAMM Administration"
     ]
-    dashboard = auth.get("dashboard", "")
+    dashboard = payload.get("dashboard", "")
     if dashboard not in allowed_dashboards:
-        log.error("Invalid dashboard. auth=%s" % auth)
+        log.error("Invalid dashboard. payload='%s'", payload)
         return None
 
     return payload

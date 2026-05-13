@@ -177,7 +177,6 @@ def private(**kwargs):
 	log.debug("Private request: kwargs='%s'", str(kwargs))
 
 	if tokens.verify_token(kwargs.get("token", "")) is None:
-		log.error("Invalid token. token=%s" % token)
 		return not_authorized()
 
 	action = kwargs.get("action")
