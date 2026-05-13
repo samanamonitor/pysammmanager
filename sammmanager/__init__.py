@@ -162,7 +162,7 @@ def updatecreds(**kwargs):
 		log.info("creating keytab")
 
 	filepath = Path(__file__).parent / "docs/samm-update-credentials.html"
-	with filelpath.open("rb") as f:
+	with filepath.open("rb") as f:
 		body = f.read()
 
 	return ("200 OK",
