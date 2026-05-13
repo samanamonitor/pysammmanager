@@ -6,6 +6,7 @@ from pathlib import Path
 from multipart import parse_form_data
 from http import cookies
 from datetime import datetime, timedelta, timezone
+from .tokens import gettoken
 
 log = logging.getLogger(__name__)
 
@@ -31,8 +32,8 @@ def application(env, start_response):
 
 	log.info("Requests received. data=%s", env)
 	try:
-		if path_info.relative_to("/").name == "gettoken":
-			status, headers, body = tokens.gettoken(**kwargs)
+		if str(path_info) == "/gettoken":
+			status, headers, body = gettoken(**kwargs)
 			start_response(status, headers)
 			return body
 
