@@ -31,6 +31,9 @@ def application(env, start_response):
 
 	log.info("Requests received. data=%s", env)
 	try:
+		if path_info.relative_to(basepath).name == "expire":
+			raise NotAuthorized
+
 		if sammcookie is None and path_info.relative_to(basepath).name != "gettoken":
 			token = query_string.pop("token", "")
 			if token == "":
