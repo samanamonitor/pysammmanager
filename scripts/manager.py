@@ -25,12 +25,13 @@ def process_session(env, basepath, token):
 	if path_info.relative_to(basepath).name == "expire":
 		log.info("Forcefully expiring token.")
 		raise NotAuthorized
+
+	if isinstance(token, list):
+		token = token[0]
 	log.debug("token='%s'", token)
 
 	if sammcookie is None:
 
-		if not isinstance(token, str) and isinstance(token, list):
-			token = token[0]
 
 		if token is None or token == "":
 			raise NotAuthorized
