@@ -20,7 +20,7 @@ def process_session(env, basepath, token):
 	auth_cookie = env.get("HTTP_COOKIE", "")
 	cookie = cookies.SimpleCookie()
 	cookie.load(auth_cookie)
-	sammcookie=cookie.get("samm_auth", cookies.Morsel()).value
+	sammcookie=cookie.get("samm_auth")
 
 	if path_info.relative_to(basepath).name == "expire":
 		log.info("Forcefully expiring token.")
@@ -30,8 +30,10 @@ def process_session(env, basepath, token):
 		token = token[0]
 	log.debug("token='%s'", token)
 
-	if sammcookie is None:
+	if sammcookie is None and token is None:
+		raise NotAuthorized
 
+	if isinstance(token, str):
 
 		if token is None or token == "":
 			raise NotAuthorized
@@ -48,7 +50,7 @@ def process_session(env, basepath, token):
 			("Location", str(path_info))
 			], b""
 	else:
-		token = sammcookie
+		token = sammcookie.value
 
 	if verify_token(token) is None:
 		raise NotAuthorized
