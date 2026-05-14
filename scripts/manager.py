@@ -28,7 +28,7 @@ def process_session(env, basepath, token):
 
 	if isinstance(token, list):
 		token = token[0]
-	log.debug("token='%s'", token)
+	log.debug("query_token='%s' session_token='%s", token, sammcookie.value if sammcookie is not None else "none")
 
 	if sammcookie is None and token is None:
 		raise NotAuthorized
