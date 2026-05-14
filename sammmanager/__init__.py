@@ -125,10 +125,6 @@ def hostdetail(hostingservername=None):
 def updatecreds(**kwargs):
 	log.info("Received body data=%s", kwargs)
 
-	if tokens.verify_token(kwargs.get("token", "")) is None:
-		log.error("Invalid token. token=%s" % token)
-		return not_authorized()
-
 	auth_method = kwargs.get("auth_method")
 	if auth_method == "userpass":
 		username = kwargs.get("username")
