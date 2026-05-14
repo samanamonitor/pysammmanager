@@ -44,13 +44,14 @@ def process_session(env, basepath, token):
 		cookie['samm_auth']['expires'] = cookie_expires
 		cookie['samm_auth']['path'] = str(basepath)
 		log.info("Token moved to cookie.")
-		log.debug("token='%s'", token)
+		log.debug("new_cookie_token='%s'", token)
 		return "302 Found", [
 			("Set-Cookie", cookie['samm_auth'].OutputString()),
 			("Location", str(path_info))
 			], b""
 	else:
-		token = sammcookie.value
+		if sammcookie is not None:
+			token = sammcookie.value
 
 	if verify_token(token) is None:
 		raise NotAuthorized
