@@ -1,0 +1,348 @@
+// ── Sample data ──────────────────────────────────────────────────────────────
+const FS = {
+  '/': []
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let currentPath  = '/';
+let sortCol      = 'name';
+let sortAsc      = true;
+let selected     = new Set();
+let renameTarget = null;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function formatSize(bytes) {
+  if (bytes === null) return '—';
+  if (bytes < 1024)        return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function totalSize(files) {
+  return files.reduce((s, f) => s + (f.size || 0), 0);
+}
+
+function extColor(ext) {
+  const map = {
+    keytab: ['#f18b34', 'rgba(241,139,52,.15)'],
+    conf:   ['#3d8ef8', 'rgba(61,142,248,.15)'],
+    yaml:   ['#3d8ef8', 'rgba(61,142,248,.15)'],
+    env:    ['#fade2a', 'rgba(250,222,42,.12)'],
+    log:    ['#73bf69', 'rgba(115,191,105,.12)'],
+    md:     ['#9fa8b5', 'rgba(159,168,181,.12)'],
+  };
+  return map[ext] || ['#9fa8b5', 'rgba(159,168,181,.12)'];
+}
+
+function fileIcon(item) {
+  if (item.type === 'folder') {
+    return `<svg width="16" height="16" fill="#3d8ef8" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+  }
+  const colors = { log:'#73bf69', keytab:'#f18b34', conf:'#3d8ef8', yaml:'#3d8ef8', env:'#fade2a', md:'#9fa8b5' };
+  const c = colors[item.ext] || '#5c6370';
+  return `<svg width="15" height="15" fill="none" stroke="${c}" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+async function renderFiles(update=false) {
+  if (update) FS[currentPath] = await listFiles();
+  const query  = document.getElementById('search-input').value.toLowerCase();
+  let   items  = (FS[currentPath] || []).filter(f => f.name.toLowerCase().includes(query));
+
+  // Sort: folders first, then by column
+  items.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+    let av = a[sortCol], bv = b[sortCol];
+    if (av === null) av = 0;
+    if (bv === null) bv = 0;
+    if (typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return sortAsc ? av - bv : bv - av;
+  });
+
+  const list = document.getElementById('file-list');
+
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <p>${query ? 'No files match your search.' : 'This folder is empty.'}</p>
+    </div>`;
+  } else {
+    list.innerHTML = items.map(item => {
+      const id  = item.name;
+      const sel = selected.has(id);
+      const [ec, ebg] = item.ext ? extColor(item.ext) : ['', ''];
+      const badge = item.ext
+        ? `<span class="file-ext-badge" style="color:${ec};background:${ebg}">${item.ext.toUpperCase()}</span>`
+        : '';
+      return `
+      <div class="file-row${sel?' selected':''}" data-id="${id}" data-type="${item.type}"
+           onclick="rowClick(event,'${id}')">
+        <input type="checkbox" class="file-check" ${sel?'checked':''} onclick="event.stopPropagation();toggleSelect('${id}')"/>
+        <div class="file-name">
+          <span class="file-icon">${fileIcon(item)}</span>
+          <span class="file-label${item.type==='folder'?' folder':''}">${item.name}</span>
+          ${badge}
+        </div>
+        <div class="col-size">${formatSize(item.size)}</div>
+        <div class="col-type">${item.type === 'folder' ? '—' : (item.ext || 'file').toUpperCase()}</div>
+        <div class="col-modified">${item.modified}</div>
+        <div class="row-actions">
+          <button class="row-btn" title="Rename" onclick="event.stopPropagation();openRenameModal('${id}','${item.name}')">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          ${item.type==='file'?`<button class="row-btn" title="Download" onclick="event.stopPropagation();downloadFile('${item.name}')">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>`:''}
+          <button class="row-btn del" title="Delete" onclick="event.stopPropagation();deleteSingle('${id}','${item.name}', true)">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Stats
+  const allItems = FS[currentPath] || [];
+  document.getElementById('stat-count').textContent = allItems.length;
+  document.getElementById('stat-size').textContent  = formatSize(totalSize(allItems));
+  updateSelectionUI();
+}
+
+// ── ListFiles  ───────────────────────────────────────────────────────────────
+async function listFiles() {
+  const formData = new FormData();
+  formData.append("action",   "list");
+
+  const response = await fetch("", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Rename failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+function rowClick(e, id) {
+  if (type === 'folder') {
+    return;
+  }
+  toggleSelect(id);
+}
+
+// ── Selection ────────────────────────────────────────────────────────────────
+function toggleSelect(id) {
+  if (selected.has(id)) selected.delete(id);
+  else selected.add(id);
+  renderFiles();
+}
+
+function toggleAll(cb) {
+  const items = FS[currentPath] || [];
+  if (cb.checked) {
+    items.forEach(f => {selected.add(f.name)});
+  } else {
+    items.forEach(f => selected.delete(f.name));
+  }
+  renderFiles();
+}
+
+function updateSelectionUI() {
+  const n = selected.size;
+  document.getElementById('btn-delete-sel').disabled   = n === 0;
+  document.getElementById('btn-download-sel').disabled = n === 0;
+  const sel = document.getElementById('stat-sel');
+  if (n > 0) {
+    sel.style.display = 'block';
+    document.getElementById('stat-sel-text').textContent = n + (n===1?' item':' items');
+  } else {
+    sel.style.display = 'none';
+  }
+  const allItems = FS[currentPath] || [];
+  const cb = document.getElementById('check-all');
+  cb.checked       = n > 0 && allItems.every(f => selected.has(f.name));
+  cb.indeterminate = n > 0 && !cb.checked;
+}
+
+// ── Sort ─────────────────────────────────────────────────────────────────────
+function sortBy(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  document.querySelectorAll('.col-th').forEach(th => th.classList.remove('sorted'));
+  const active = document.querySelector(`.col-th[data-col="${col}"]`);
+  if (active) active.classList.add('sorted');
+  renderFiles();
+}
+
+// ── Delete ───────────────────────────────────────────────────────────────────
+async function deleteSingle(id, name, update=true) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  const formData = new FormData();
+  formData.append("action",   "delete");
+  formData.append("file_name", name);
+
+  const response = await fetch("", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Delete failed: ${response.status} ${response.statusText}`);
+  }
+
+  renderFiles(update);
+  return response.json();
+}
+
+function deleteSelected() {
+  if (!confirm(`Delete ${selected.size} item(s)?`)) return;
+  selected.forEach((id, name) => {
+    deleteSingle(id, name, false)
+  });
+  renderFiles(true);
+}
+
+// ── Download ─────────────────────────────────────────────────────────────────
+function downloadSelected() {
+  selected.forEach(f => downloadFile(f));
+}
+
+async function downloadFile(fileName) {
+  const formData = new FormData();
+  formData.append("action",    "download");
+  formData.append("file_name", fileName);
+
+  const response = await fetch("", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+  }
+
+  const blob     = await response.blob();
+  const url      = URL.createObjectURL(blob);
+  const anchor   = document.createElement("a");
+  anchor.href     = url;
+  anchor.download = fileName;
+  anchor.click();
+
+  URL.revokeObjectURL(url);
+}
+
+// ── Upload ───────────────────────────────────────────────────────────────────
+async function handleUpload(input) {
+  const formData = new FormData();
+  formData.append("action", "upload");
+
+  const files = Array.from(input.files);
+
+  for (const f of input.files) {
+    const fileContent = await f.arrayBuffer();
+
+    formData.append(f.name,   new Blob([fileContent], { type: "application/octet-stream" }), f.name);
+  }
+  const response = await fetch("", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+  }
+  input.value = '';
+
+  renderFiles(true);
+  return response.json();
+}
+
+// ── Drag & drop upload ───────────────────────────────────────────────────────
+const panel = document.getElementById('panel');
+panel.addEventListener('dragenter', e => { e.preventDefault(); panel.classList.add('drag-over'); });
+panel.addEventListener('dragover',  e => { e.preventDefault(); });
+panel.addEventListener('dragleave', e => { if (!panel.contains(e.relatedTarget)) panel.classList.remove('drag-over'); });
+panel.addEventListener('drop', e => {
+  e.preventDefault();
+  panel.classList.remove('drag-over');
+  const input = document.getElementById('upload-input');
+  // Simulate: just read file names from dataTransfer
+  const files = Array.from(e.dataTransfer.files);
+  files.forEach(f => {
+    const ext = f.name.includes('.') ? f.name.split('.').pop().toLowerCase() : null;
+    if (!(FS[currentPath] || []).find(e => e.name === f.name)) {
+      FS[currentPath] = FS[currentPath] || [];
+      FS[currentPath].push({ name: f.name, type: 'file', size: f.size,
+        modified: new Date().toISOString().slice(0,16).replace('T',' '), ext });
+    }
+  });
+  renderFiles(true);
+});
+
+
+// ── Rename modal ─────────────────────────────────────────────────────────────
+function openRenameModal(id, name) {
+  renameTarget = { id, name };
+  document.getElementById('rename-value').value = name;
+  document.getElementById('modal-rename').classList.add('open');
+  setTimeout(() => {
+    const inp = document.getElementById('rename-value');
+    inp.focus();
+    const dot = name.lastIndexOf('.');
+    inp.setSelectionRange(0, dot > 0 ? dot : name.length);
+  }, 50);
+}
+
+// ── Rename File ─────────────────────────────────────────────────────────────────────
+function confirmRename() {
+  const newName = document.getElementById('rename-value').value.trim();
+  if (!newName || !renameTarget) return;
+  const file = (FS[currentPath] || []).find(f => f.name === renameTarget.name);
+  if (file) {
+    file.name = newName;
+    if (file.type === 'folder') {
+      const oldPath = currentPath === '/' ? '/' + renameTarget.name : currentPath + '/' + renameTarget.name;
+      const newPath = currentPath === '/' ? '/' + newName : currentPath + '/' + newName;
+      if (FS[oldPath] !== undefined) { FS[newPath] = FS[oldPath]; delete FS[oldPath]; }
+    } else {
+      file.ext = newName.includes('.') ? newName.split('.').pop().toLowerCase() : null;
+    }
+  }
+  renameFile(renameTarget.name, newName)
+  selected.delete(renameTarget.id);
+  renameTarget = null;
+  closeModal('modal-rename');
+  renderFiles(true);
+}
+
+async function renameFile(oldName, newName) {
+  const formData = new FormData();
+  formData.append("action",   "rename");
+  formData.append("old_name", oldName);
+  formData.append("new_name", newName);
+
+  const response = await fetch("", {
+    method: "POST",
+    body:   formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Rename failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+renderFiles(true);

@@ -11,6 +11,9 @@ import os
 import logging
 from . import tokens
 import json
+from pathlib import Path
+from datetime import datetime
+from email.message import Message
 
 log = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stderr)
@@ -65,6 +68,26 @@ def rdp(ip_address=None):
 			],
 			rdp_data.encode('ascii'))
 
+def static(localfile=None):
+	filepath = Path(__file__).parent / Path("docs/static") / Path(localfile)
+	with filepath.open("rb") as f:
+		body = f.read()
+
+	if filepath.suffix == ".css":
+		ct = ("Content-Type", "text/css; charset=utf-8")
+	elif filepath.suffix == ".js":
+		ct = ("Content-Type", "text/javascript; charset=utf-8")
+	elif filepath.suffix == ".html":
+		ct = ("Content-Type", "text/html; charset=utf-8")
+	else:
+		raise ValueError(localfile)
+
+	return ("200 OK",
+		[
+			ct,
+			("Content-Length", str(len(body))),
+		], body)
+
 def vmdetail(hostedmachinename=None):
 	vc = VCenterSession(os.environ.get('SAMM_CONFIG', "/app/conf.json"))
 	if hostedmachinename is None:
@@ -101,23 +124,6 @@ def hostdetail(hostingservername=None):
 
 def updatecreds(**kwargs):
 	log.info("Received body data=%s", kwargs)
-	token = kwargs.get("token")
-	if token is None:
-		log.error("No token found in request")
-		return not_authorized()
-
-	if isinstance(token, list) and len(token) > 0:
-		token = token[0]
-
-	auth = tokens.verify_token(token)
-	if not isinstance(auth, dict):
-		log.error("Invalid token. token=%s" % token)
-		return not_authorized()
-
-	if auth.get("dashboard", "") != "SAMM Windows Credentials Update":
-		log.error("Invalid dashboard. auth=%s" % auth)
-		return not_authorized()
-
 
 	auth_method = kwargs.get("auth_method")
 	if auth_method == "userpass":
@@ -138,7 +144,8 @@ def updatecreds(**kwargs):
 			file.write("CIM_METHOD=kerberos\n")
 		log.info("creating keytab")
 
-	with open("/app/samm-update-credentials.html", "rb") as f:
+	filepath = Path(__file__).parent / "docs/samm-update-credentials.html"
+	with filepath.open("rb") as f:
 		body = f.read()
 
 	return ("200 OK",
@@ -147,17 +154,118 @@ def updatecreds(**kwargs):
 			("Content-Length", str(len(body))),
 		], body)
 
-def gettoken(**kwargs):
-	user = kwargs.get("user", "")
-	if isinstance(user, list):
-		user = "".join(user)
-	dashboard = kwargs.get("dashboard", "")
-	if isinstance(dashboard, list):
-		dashboard = "".join(dashboard)
-	t = tokens.generate_token(user, dashboard)
-	body = json.dumps({"token": t})
+def private(**kwargs):
+	log.debug("Private request: kwargs='%s'", str(kwargs))
+
+
+	action = kwargs.get("action")
+
+	if action == "list":
+		return list_files()
+
+	elif action == "rename":
+		old_name=kwargs.get("old_name", "")
+		new_name=kwargs.get("new_name", "")
+		if old_name == "" or new_name == "":
+			raise Exception("Invalid parameters")
+		return rename_file(old_name, new_name)
+
+	elif action == "download":
+		file_name=kwargs.get("file_name", "")
+		if file_name == "":
+			raise Exception("Invalid file_name")
+		return download_file(file_name)
+
+	elif action == "delete":
+		file_name=kwargs.get("file_name", "")
+		if file_name == "":
+			raise Exception("Invalid file_name")
+		return delete_file(file_name)
+
+	elif action == "upload":
+		files = kwargs.get("files", [])
+		if len(files) < 1:
+			raise Exception("Invalid parameters")
+		return upload_files(files)
+
+	filepath = Path(__file__).parent / "docs/samm-file-manager.html"
+	with filepath.open("rb") as f:
+		body = f.read()
+
+	return ("200 OK",
+		[
+			("Content-Type", "text/html; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)
+
+def rename_file(old_name, new_name):
+	log.debug("Renaming file %s to %s", old_name, new_name)
+	old_path = Path("/private") / old_name
+	new_path = Path("/private") / new_name
+	try:
+		old_path.rename(new_path)
+		out = { "error": "", "details": "File renamed"}
+	except Exception as e:
+		out = { "error": str(e), "details": f"Couldn't rename '{old_name}' to '{new_name}'"}
+	body = json.dumps(out).encode("utf-8")
 	return ("200 OK",
 		[
 			("Content-Type", "application/json; charset=utf-8"),
-			("Content-Length", str(len(body)))
-		], [body.encode('utf-8')])
+			("Content-Length", str(len(body))),
+		], body)
+
+def list_files():
+	items=[]
+	privatepath=Path("/private")
+	for f in privatepath.iterdir():
+		if f.is_file():
+			modified = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+			file={ "name": f.name, "type": "file", "size": f.stat().st_size, "modified": modified}
+			items.append(file)
+
+	body = json.dumps(items).encode("utf-8")
+	return ("200 OK",
+		[
+			("Content-Type", "application/json; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)
+
+def download_file(file_name):
+	filepath = Path("/private") / file_name
+	with filepath.open("rb") as f:
+		body = f.read()
+
+	return ("200 OK",
+		[
+			("Content-Type", "application/octet-stream"),
+			("Content-Length", str(len(body))),
+		], body)
+
+def delete_file(file_name):
+	filepath = Path("/private") / file_name
+	try:
+		filepath.unlink()
+		out = { "error": "", "details": f"File {file_name} deleted"}
+	except Exception as e:
+		log.error("Could not delete file '%s'. error='%s'", str(filepath), str(e))
+		out = { "error": str(e), "details": f"Couldn't delete '{str(file_name)}'"}
+
+	body = json.dumps(out).encode("utf-8")
+	return ("200 OK",
+		[
+			("Content-Type", "application/json; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)
+
+def upload_files(files):
+	for k, v in files.items():
+		log.debug("Files to upload k='%s' v='%s' content_disposition='%s'", k, v, v.disposition)
+		msg = Message()
+		msg['Content-Disposition'] = v.disposition
+		v.save_as(Path("/private") / msg.get_filename())
+	body = json.dumps({ "error": "", "details": "Files Uploaded"}).encode("utf-8")
+	return ("200 OK",
+		[
+			("Content-Type", "application/json; charset=utf-8"),
+			("Content-Length", str(len(body))),
+		], body)
