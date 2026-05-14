@@ -28,7 +28,7 @@ def process_session(env, basepath, token):
 
 	if isinstance(token, list):
 		token = token[0]
-	log.debug("query_token='%s' session_token='%s", token, sammcookie.value if sammcookie is not None else "none")
+	log.debug("query_token='%s' session_token='%s'", token, sammcookie.value if sammcookie is not None else "none")
 
 	if sammcookie is None and token is None:
 		raise NotAuthorized
@@ -38,7 +38,7 @@ def process_session(env, basepath, token):
 		if token is None or token == "":
 			raise NotAuthorized
 
-		cookie['samm_auth'] = token[0]
+		cookie['samm_auth'] = token
 		expire_date = datetime.now(timezone.utc) + timedelta(minutes=5)
 		cookie_expires = expire_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
 		cookie['samm_auth']['expires'] = cookie_expires
